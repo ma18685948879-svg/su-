@@ -20,7 +20,7 @@ INSTALLATION_REPORT.md
 skills-lock.json
 ```
 
-每个 Skill 均包含独立的 `SKILL.md` 适配入口、`SKILL.upstream.md` 上游原文、资源、脚本、许可证和 `UPSTREAM.json` 版本校验记录。无嵌套 `.git`，无 submodule。Folio 的大型 `demos/` 省略；生产资源与布局参考保留。具体省略清单可审计。
+每个 Skill 均包含独立的 `SKILL.md` 适配入口、`SKILL.upstream.md` 上游原文、资源、脚本、许可证和 `UPSTREAM.json` 版本校验记录。无嵌套 `.git`，无 submodule。Folio 的大型 `demos/` 和上游 README 用展示截图 / 宣传图省略；生产资源与布局参考保留。具体省略清单可审计。
 
 ## 定位与格式
 

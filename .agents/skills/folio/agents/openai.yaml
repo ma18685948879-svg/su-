@@ -1,0 +1,6 @@
+interface:
+  display_name: "Folio · 建筑图文排版"
+  short_description: "建筑景观室内原图编排与作品集，默认导出文字可编辑 PPTX 成果"
+  default_prompt: "使用 $folio 编排我的原图与文案，输出文字可编辑 PPTX。"
+policy:
+  allow_implicit_invocation: true

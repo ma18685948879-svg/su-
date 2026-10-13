@@ -1,0 +1,6 @@
+interface:
+  display_name: "Guizang · HTML 演示"
+  short_description: "仅在明确指定瑞士风或杂志风时使用，保留原图并输出 HTML 演示"
+  default_prompt: "使用 $guizang-ppt-skill 制作瑞士风 HTML 设计汇报，保留原始图片。"
+policy:
+  allow_implicit_invocation: false

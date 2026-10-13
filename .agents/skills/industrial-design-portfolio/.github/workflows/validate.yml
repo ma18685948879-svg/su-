@@ -1,0 +1,112 @@
+name: Validate
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: ${{ matrix.os }} · Python 3.11
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+
+      - name: Install test dependencies
+        run: python -m pip install --requirement requirements-test.txt
+
+      - name: Run Python test suite
+        run: python -m unittest discover -s tests -p "test_*.py" -v
+
+      - name: Check generated adapters
+        run: python scripts/sync_adapters.py --check
+
+      - name: Validate layout library
+        run: python scripts/validate_layout_library.py
+
+      - name: Validate Showcase manifest
+        run: python scripts/validate_manifest.py showcase/modular-desk-lamp/portfolio_manifest.json
+
+      - name: Validate Showcase portfolio
+        run: python scripts/validate_portfolio.py showcase/modular-desk-lamp/index.html
+
+      - name: Run behavior rubrics
+        run: python scripts/run_evals.py --all
+
+      - name: Smoke-test runtime installation
+        run: >-
+          python scripts/install_skill.py
+          --platform agents
+          --dest "${{ runner.temp }}/id-skill-smoke"
+
+      - name: Verify runtime whitelist
+        run: >-
+          python -c "from pathlib import Path;
+          p=Path(r'${{ runner.temp }}')/'id-skill-smoke'/'industrial-design-portfolio';
+          required=['SKILL.md','AGENTS.md','CLAUDE.md','GEMINI.md','VERSION','LICENSE','agents','assets','references','schemas','scripts'];
+          forbidden=['showcase','evals','tests','README.md','README.zh-CN.md','requirements-test.txt','package.json','package-lock.json','playwright.config.mjs','node_modules'];
+          runtime_scripts={'validate_layout_library.py','validate_manifest.py','validate_portfolio.py'};
+          missing=[x for x in required if not (p/x).exists()];
+          leaked=[x for x in forbidden if (p/x).exists()];
+          installed_scripts={x.name for x in (p/'scripts').iterdir()};
+          assert not missing, f'Missing runtime files: {missing}';
+          assert not leaked, f'Non-runtime files leaked into installation: {leaked}';
+          assert installed_scripts == runtime_scripts, f'Unexpected runtime scripts: {installed_scripts}';
+          print('Runtime whitelist verified')"
+
+  browser:
+    name: Ubuntu · Chromium behavior
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Verify npx skills discovery
+        run: npx --yes skills@1.5.19 add . --list
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run browser behavior tests
+        run: npm run test:browser
+
+      - name: Upload Playwright report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

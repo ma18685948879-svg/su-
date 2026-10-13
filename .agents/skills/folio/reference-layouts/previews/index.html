@@ -1,0 +1,1359 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Folio Reference Layout Previews</title>
+  <style>
+    :root {
+      --bg: #f4f1ec;
+      --ink: #1e1e1c;
+      --muted: #78746d;
+      --line: #c9c2b8;
+      --panel: #fffdf8;
+      --image: #d4d0c7;
+      --image-dark: #9f998f;
+      --text: #4e4941;
+      --text-bg: #efebe4;
+      --caption-bg: #f8e5cf;
+      --meta-bg: #dfe8e0;
+      --accent: #7d6b58;
+      --space: #fffaf3;
+      --space-mark: #d8c9b7;
+      --bleed-line: #d76464;
+      --trim-line: #2f2f2c;
+      --safe-line: #3d8b68;
+      --content-line: #5877a6;
+      --gap: 10px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0;
+    }
+    header {
+      padding: 40px 48px 24px;
+      border-bottom: 1px solid var(--line);
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 32px;
+      line-height: 1.1;
+      font-weight: 650;
+    }
+    p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+      max-width: 820px;
+    }
+    .preview-revision { margin-top: 10px; color: var(--ink); font-size: 12px; font-weight: 600; }
+    main {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
+      gap: 28px;
+      padding: 32px 48px 56px;
+    }
+    .portrait-editorial-group { display: contents; }
+    .portrait-editorial-group > h2 { grid-column: 1 / -1; margin-bottom: -16px; font-size: 22px; }
+    .portrait-editorial-group > section > h3 { margin: 0 0 12px; font-size: 15px; font-weight: 650; }
+    article {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 0;
+      padding: 18px;
+    }
+    h2 {
+      margin: 0 0 12px;
+      font-size: 15px;
+      font-weight: 650;
+    }
+    .layout-record { margin: -4px 0 12px; max-width: none; color: var(--muted); font-size: 11px; line-height: 1.4; }
+    .layout-record strong { color: var(--ink); font-weight: 650; }
+    .layout-record .record-meta { display: block; margin-top: 3px; }
+    .layout-extra { margin-top: 10px; color: var(--muted); font-size: 11px; line-height: 1.4; }
+    .layout-extra summary { cursor: pointer; color: var(--ink); }
+    .layout-extra p { margin-top: 6px; font-size: inherit; line-height: inherit; }
+    .preview-zoom { margin: 2px 0 0; padding: 5px 0; border: 0; background: none; color: var(--ink); font: inherit; font-size: 11px; font-weight: 600; line-height: 1.2; text-decoration: underline; cursor: pointer; }
+    .preview-focus { width: min(96vw, 1600px); max-width: 96vw; max-height: 96vh; padding: 0; border: 1px solid var(--line); background: var(--bg); color: var(--ink); overflow: auto; }
+    .preview-focus::backdrop { background: rgba(20, 19, 17, .72); }
+    .preview-focus-header { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 12px 18px; background: var(--bg); border-bottom: 1px solid var(--line); }
+    .preview-focus-header strong { font-size: 13px; line-height: 1.3; }
+    .preview-focus-close { flex: none; width: 32px; height: 32px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); font: 24px/1 Arial, sans-serif; cursor: pointer; }
+    .preview-focus-stage { position: relative; margin: 16px auto 20px; }
+    .preview-focus-stage > .slide { position: absolute; top: 0; left: 0; margin: 0; transform-origin: top left; }
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 18px;
+    }
+    .legend span {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1;
+      padding: 7px 9px;
+    }
+    .legend .line-key { display: inline-flex; align-items: center; gap: 7px; }
+    .legend .line-key::before { content: ""; display: inline-block; width: 18px; border-top: 2px solid; }
+    .legend .key-bleed::before { border-color: var(--bleed-line); border-top-style: dashed; }
+    .legend .key-trim::before { border-color: var(--trim-line); }
+    .legend .key-safe::before { border-color: var(--safe-line); border-top-style: dashed; }
+    .legend .key-content::before { border-color: var(--content-line); border-top-style: dotted; }
+    .legend .key-gutter::before { border-color: #827c73; border-top-style: dashed; }
+    .slide {
+      aspect-ratio: 16 / 9;
+      border: 2px solid var(--trim-line);
+      background:
+        radial-gradient(circle at 12px 12px, rgba(216, 201, 183, .42) 1px, transparent 1.2px),
+        var(--space);
+      background-size: 16px 16px, auto;
+      margin: 8px;
+      padding: max(56px, 12%);
+      display: grid;
+      gap: var(--gap);
+      position: relative;
+      overflow: visible;
+    }
+    .slide {
+      --safe-inset-y: 8%;
+      --safe-inset-x: 8%;
+      --content-inset-y: 10%;
+      --content-inset-x: 10%;
+    }
+    .editorial-family {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 620px), 620px));
+      gap: 18px;
+    }
+    .editorial-family > h3,
+    .editorial-family > p { grid-column: 1 / -1; }
+    .editorial-family > p { margin-top: -10px; }
+    .editorial-family article { min-width: 0; }
+    .editorial-family article > .slide { width: calc(100% - 16px); }
+    .editorial-page {
+      aspect-ratio: 210 / 297;
+      padding: 15.56% 12%;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      min-height: 0;
+      overflow: hidden;
+      background: #fffdf8;
+    }
+    .editorial-page { --safe-inset-y: 6%; --safe-inset-x: 7%; --content-inset-y: 11%; --content-inset-x: 12%; }
+    .editorial-page::before,
+    .editorial-page::after { display: none; }
+    .editorial-running-head,
+    .editorial-folio {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      color: #69645c;
+      font-size: 9px;
+      line-height: 1.2;
+      text-transform: uppercase;
+      letter-spacing: 0;
+    }
+    .editorial-running-head { padding-bottom: 5px; border-bottom: 1px solid #bdb7ae; }
+    .editorial-folio { margin-top: auto; padding-top: 6px; border-top: 1px solid #bdb7ae; }
+    .editorial-title-block { display: grid; align-content: start; gap: 5px; min-height: 0; }
+    .editorial-title-lines { color: #302d29; font: 700 24px/1.08 Georgia, serif; }
+    .editorial-deck { color: #69645c; font: 10px/1.25 Georgia, serif; }
+    .editorial-image {
+      min-height: 110px;
+      flex: 1 1 auto;
+      border: 1px solid #aaa397;
+      background: repeating-linear-gradient(135deg, #d8d3c9 0 9px, #c8c2b7 9px 18px);
+      position: relative;
+    }
+    .editorial-image::before {
+      content: "IMAGE PLACEHOLDER";
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      color: #5c574f;
+      font-size: 10px;
+      font-weight: 750;
+    }
+    .editorial-columns { display: grid; grid-template-columns: 1.08fr .92fr; gap: 20px; min-height: 0; flex: 1 1 0; overflow: hidden; }
+    .editorial-column { display: grid; align-content: start; gap: 8px; min-width: 0; }
+    .editorial-columns .editorial-column { grid-template-rows: auto minmax(0, 1fr); }
+    .editorial-columns .editorial-copy-lines,
+    .editorial-bottom-modules > .editorial-copy-lines,
+    .editorial-main-story > .editorial-copy-lines:last-child { height: 100%; }
+    .editorial-section-title { color: #8b5547; font: 700 13px/1.15 Georgia, serif; }
+    .editorial-copy-lines { min-height: 0; overflow: hidden; color: #4e4941; font: 9px/1.25 Georgia, serif; }
+    .editorial-copy-lines p { margin: 0 0 8px; color: inherit; font: inherit; }
+    .editorial-caption { margin-top: -4px; color: #69645c; font: 8px/1.2 Arial, sans-serif; }
+    .editorial-section-head { display: grid; grid-template-columns: 28px 1fr; gap: 10px; align-items: center; }
+    .editorial-index { display: grid; place-items: center; width: 28px; height: 28px; color: #fffdf8; background: #514c45; font: 700 9px/1 Arial, sans-serif; }
+    .editorial-section-title-group { display: grid; gap: 4px; }
+    .editorial-section-headline { display: grid; grid-template-columns: 28px 1fr; gap: 10px; align-items: center; }
+    .editorial-parallel { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; flex: 0 0 90px; min-height: 0; }
+    .editorial-wide-image { height: 120px; min-height: 90px; flex: 0 1 120px; }
+    .editorial-bottom-modules { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; min-height: 0; flex: 1 1 0; overflow: hidden; }
+    .editorial-bottom-modules .editorial-column { grid-template-rows: auto minmax(0, 1fr); }
+    .editorial-bottom-modules .editorial-column > .editorial-copy-lines { height: 100%; }
+    .editorial-quote {
+      min-height: 0;
+      padding: 8px;
+      border-left: 2px solid #a85c49;
+      background: #eeeae2;
+    }
+    .editorial-quote { color: #8b5547; font: 700 11px/1.25 Georgia, serif; }
+    .editorial-modular-grid { display: grid; grid-template-columns: 1.12fr .88fr; gap: 20px; min-height: 0; flex: 1 1 0; overflow: hidden; }
+    .editorial-main-story { display: grid; grid-template-rows: 42% auto minmax(0, 1fr); gap: 12px; min-height: 0; }
+    .editorial-modules { display: grid; align-content: space-between; gap: 12px; }
+    .editorial-module { display: grid; grid-template-columns: 22px 1fr; gap: 8px; min-height: 0; overflow: hidden; }
+    .editorial-module .editorial-index { width: 20px; height: 20px; font-size: 8px; }
+    .editorial-mini-title { margin-bottom: 4px; color: #514c45; font: 700 9px/1.2 Georgia, serif; }
+    .social-family { grid-column: 1 / -1; max-width: 620px; }
+    .social-family > p { margin: -4px 0 14px; }
+    .photo-ratio-options { display: flex; flex-wrap: wrap; align-items: end; gap: 10px 18px; margin: 0 0 12px; }
+    .photo-ratio-options span { display: grid; justify-items: center; gap: 4px; color: var(--muted); font-size: 9px; }
+    .photo-ratio-options i { display: block; width: 48px; border: 1px dashed var(--accent); background: #eeeae2; }
+    .photo-ratio-options .ratio-16x9 i { aspect-ratio: 16 / 9; border-width: 2px; border-color: #a34236; }
+    .photo-ratio-options .ratio-3x2 i { aspect-ratio: 3 / 2; }
+    .photo-ratio-options .ratio-4x3 i { aspect-ratio: 4 / 3; }
+    .photo-ratio-options .ratio-square i { aspect-ratio: 1; }
+    .photo-ratio-note { margin: 0 0 12px; color: var(--muted); font-size: 10px; line-height: 1.4; }
+    .slide.social-page {
+      aspect-ratio: 4 / 5;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      overflow: hidden;
+      background: #fffdf8;
+      --safe-inset-y: 4%;
+      --safe-inset-x: 8%;
+      --content-inset-y: 6%;
+      --content-inset-x: 9%;
+    }
+    .social-page .guide-system { clip-path: inset(var(--photo-end, 45%) 0 0 0); }
+    .social-photo {
+      flex: none;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: repeating-linear-gradient(135deg, #d8d3c9 0 12px, #c8c2b7 12px 24px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #302d29;
+      font-size: 10px;
+      font-weight: 700;
+      position: relative;
+    }
+    .social-photo::before { content: ""; position: absolute; inset: 6px; border: 2px dashed #a34236; pointer-events: none; }
+    .social-photo span { position: absolute; font-size: 7px; color: #302d29; }
+    .social-photo .photo-meta-start { left: 9%; top: 19%; }
+    .social-photo .photo-meta-end { right: 9%; bottom: 10%; }
+    .social-photo .photo-ratio-title { top: 12px; right: 12px; color: #a34236; font: 700 8px/1 Arial, sans-serif; }
+    .social-title-row {
+      flex: 0 0 14%;
+      min-height: 0;
+      padding: 3% 9% 2%;
+      display: grid;
+      grid-template-columns: minmax(0, 3fr) minmax(0, 1fr);
+      gap: 5%;
+      align-items: start;
+    }
+    .social-headline { margin: 0; font: 700 24px/1.12 Georgia, serif; color: #302d29; }
+    .social-headline em { color: #ae4e48; font-style: normal; }
+    .social-rail { color: #746e65; font-size: 8px; line-height: 1.45; text-align: right; }
+    .social-rail strong { display: block; margin-bottom: 5px; color: #ae4e48; font-size: 8px; }
+    .social-columns {
+      flex: 1 1 0;
+      min-height: 0;
+      padding: 1% 9% 2%;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 3%;
+    }
+    .social-column { min-width: 0; overflow: hidden; color: #4e4941; font: 9px/1.28 Georgia, serif; }
+    .social-column p { margin: 0 0 8px; color: inherit; font: inherit; }
+    .social-pull { margin: 8px 0; color: #ae4e48; font: 700 12px/1.2 Georgia, serif; }
+    .social-conclusion {
+      flex: 0 0 10%;
+      padding: 1% 9% 4%;
+      display: grid;
+      grid-template-columns: minmax(0, 4fr) minmax(0, 1fr);
+      gap: 4%;
+      align-items: start;
+    }
+    .social-conclusion strong { color: #302d29; font: 700 15px/1.15 Georgia, serif; }
+    .social-conclusion strong em { color: #ae4e48; font-style: normal; }
+    .social-conclusion small { color: #746e65; font: 7px/1.3 Georgia, serif; }
+    .social-variants { display: grid; grid-template-columns: 1fr; gap: 18px; margin-top: 18px; }
+    .social-variants article { min-width: 0; }
+    .social-variants .slide { margin: 8px 0; }
+    .mast { color: #ae4e48; font: 700 9px/1.2 Arial, sans-serif; }
+    .vertical-page { display: grid; gap: 0; padding: 0; overflow: hidden; background: #fffdf8; }
+    .vertical-page .guide-system { z-index: 2; pointer-events: none; }
+    .vertical-photo { position: relative; display: grid; place-items: center; min-height: 0; background: repeating-linear-gradient(135deg, #d8d3c9 0 12px, #c8c2b7 12px 24px); color: #302d29; font: 700 10px/1 Arial, sans-serif; }
+    .vertical-photo span { position: absolute; top: 0; right: 0; padding: 10px; color: #a34236; font: 700 8px/1 Arial, sans-serif; }
+    .vertical-head { padding: 3% 9% 0; min-height: 0; }
+    .vertical-head h3 { margin: 5px 0 0; color: #302d29; font: 700 25px/1.1 Georgia, serif; }
+    .vertical-copy { display: grid; min-height: 0; overflow: hidden; color: #4e4941; font: 10px/1.45 Georgia, serif; }
+    .vertical-copy > div { min-width: 0; overflow: hidden; }
+    .vertical-copy p { margin: 0 0 6px; color: inherit; font: inherit; }
+    .vertical-copy p:last-child { margin-bottom: 0; }
+    .vertical-closing { padding: 1% 9% 5%; display: flex; justify-content: space-between; align-items: end; gap: 12px; color: #ae4e48; font: 700 16px/1.2 Georgia, serif; }
+    .vertical-closing small { flex: none; color: #746e65; font: 700 8px/1 Arial, sans-serif; }
+    .vertical-page.article-3x4 { aspect-ratio: 3 / 4; grid-template-rows: 36% 14% 41% 9%; }
+    .article-3x4 .guide-system { clip-path: inset(36% 0 0 0); }
+    .article-3x4 .vertical-copy { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6%; padding: 0 9%; }
+    .vertical-page.article-a4 { aspect-ratio: 210 / 297; padding: 8% 9% 7%; grid-template-rows: 4% 17% 27% 5% 38% 9%; }
+    .article-a4 .vertical-head { padding: 0; }
+    .article-a4 .vertical-copy { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5%; }
+    .vertical-runhead, .vertical-caption, .vertical-footer { color: #746e65; font: 8px/1.2 Arial, sans-serif; }
+    .vertical-runhead, .vertical-footer { display: flex; justify-content: space-between; }
+    .vertical-caption { padding-top: 6px; }
+    .vertical-footer { align-items: end; }
+    .vertical-page.cover-page { aspect-ratio: 4 / 5; grid-template-rows: 80% 20%; }
+    .cover-page .vertical-photo { position: relative; }
+    .cover-page .vertical-title { padding: 3% 9% 4%; display: flex; flex-direction: column; justify-content: space-between; }
+    .cover-page h3 { margin: 0; color: #302d29; font: 700 28px/1.1 Georgia, serif; }
+    .vertical-page.continuation-page { aspect-ratio: 4 / 5; margin-top: 12px; padding: 8% 9%; grid-template-rows: 5% 16% 66% 13%; }
+    .continuation-page h3 { margin: 0; color: #302d29; font: 700 24px/1.1 Georgia, serif; }
+    .continuation-page .vertical-copy { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7%; }
+    .essay-family { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 620px), 620px)); gap: 18px; }
+    .essay-family > h3, .essay-family > p { grid-column: 1 / -1; }
+    .essay-family > p { margin: -10px 0 0; }
+    .slide.portrait-essay {
+      aspect-ratio: 210 / 297;
+      padding: 8% 9%;
+      display: grid;
+      grid-template-rows: 4% 11% 4% 27% 3% 37% 9% 5%;
+      gap: 0;
+      overflow: hidden;
+      background: #fffdf8;
+      --safe-inset-y: 4%;
+      --safe-inset-x: 7%;
+      --content-inset-y: 6%;
+      --content-inset-x: 9%;
+    }
+    .essay-runhead, .essay-footer { display: flex; justify-content: space-between; gap: 8px; color: #746e65; font: 7px/1.2 Arial, sans-serif; }
+    .essay-title { min-height: 0; overflow: hidden; }
+    .essay-title small { display: block; margin-bottom: 8px; color: #ae4e48; font: 7px/1.2 Arial, sans-serif; }
+    .essay-title h3 { margin: 0 0 7px; color: #302d29; font: 29px/1 Georgia, serif; }
+    .essay-title h3 em { color: #ae4e48; font-style: normal; }
+    .essay-title p { color: #302d29; font: 14px/1.15 Georgia, serif; }
+    .essay-credits { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; color: #746e65; font: 7px/1.25 Arial, sans-serif; }
+    .essay-credits span { min-width: 0; }
+    .essay-image { display: grid; place-items: center; min-height: 0; color: #514c45; font: 700 10px/1 Arial, sans-serif; background: repeating-linear-gradient(135deg,#d8d3c9 0 12px,#c8c2b7 12px 24px); }
+    .essay-caption { padding-top: 6px; color: #746e65; font: 7px/1.2 Arial, sans-serif; }
+    .essay-columns { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4%; min-height: 0; }
+    .essay-columns > div { min-width: 0; overflow: hidden; color: #4e4941; font: 9px/1.3 Georgia, serif; }
+    .essay-columns p { margin: 0 0 8px; color: inherit; font: inherit; }
+    .essay-quote { align-self: center; color: #ae4e48; font: 15px/1.1 Georgia, serif; }
+    .essay-quote small { display: block; margin-top: 5px; color: #746e65; font: 7px/1.2 Arial, sans-serif; }
+    .essay-footer { align-items: end; }
+    .essay-family article { min-width: 0; }
+    .essay-family article > .slide { width: calc(100% - 16px); }
+    .slide.essay-followup { padding: 8% 9%; }
+    .essay-followup .essay-section-label { color: #ae4e48; font: 700 7px/1.2 Arial, sans-serif; text-transform: uppercase; }
+    .essay-followup .essay-section-label strong { display: block; margin-top: 5px; color: #302d29; font: 18px/1.1 Georgia, serif; text-transform: none; }
+    .essay-fill { min-height: 0; overflow: hidden; color: #4e4941; font: 9px/1.3 Georgia, serif; }
+    .essay-fill p { margin: 0 0 8px; color: inherit; font: inherit; }
+    .slide.portrait-essay.essay-page-two { grid-template-rows: 4% 9% 70% 12% 5%; }
+    .essay-continuation-body { display: grid; grid-template-columns: 1fr 1fr; gap: 4%; min-height: 0; }
+    .essay-continuation-body > div { min-height: 0; }
+    .essay-rail-column { display: grid; grid-template-rows: 42% 18% 40%; }
+    .essay-rail-note { padding: 7px; border-left: 2px solid #ae4e48; background: #eeeae2; color: #8b5547; font: 700 11px/1.2 Georgia, serif; }
+    .essay-evidence-strip { display: grid; grid-template-columns: 28% 1fr; align-items: center; gap: 4%; min-height: 0; }
+    .essay-evidence-strip .essay-image { height: 100%; }
+    .essay-evidence-strip span { color: #746e65; font: 7px/1.3 Arial, sans-serif; }
+    .slide.portrait-essay.essay-page-three { grid-template-rows: 4% 10% 18% 30% 4% 29% 5%; }
+    .essay-short-copy, .essay-evidence-copy { display: grid; grid-template-columns: 1fr 1fr; gap: 4%; min-height: 0; }
+    .essay-page-three .essay-image { min-height: 0; }
+    .slide.portrait-essay.essay-page-four { grid-template-rows: 4% 9% 60% 15% 7% 5%; }
+    .essay-conclusion-copy { display: grid; grid-template-columns: 1fr 1fr; gap: 4%; min-height: 0; }
+    .essay-conclusion-statement { align-self: center; padding-top: 10px; border-top: 2px solid #ae4e48; color: #ae4e48; font: 18px/1.15 Georgia, serif; }
+    .essay-sources { display: flex; justify-content: space-between; gap: 12px; color: #746e65; font: 7px/1.25 Arial, sans-serif; text-transform: uppercase; }
+    .magazine-family {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
+      gap: 18px;
+    }
+    .magazine-family > h2,
+    .magazine-family > h3,
+    .magazine-family > p,
+    .magazine-family > .magazine-sequence { grid-column: 1 / -1; }
+    .magazine-family > p { margin-top: -10px; }
+    .magazine-family > h3 { margin: 12px 0 0; font-size: 16px; }
+    .magazine-sequence ol { margin: 8px 0 0; padding-left: 22px; }
+    .magazine-sequence li { margin: 4px 0; }
+    .magazine-spread {
+      aspect-ratio: 1.42 / 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: minmax(0, 1fr);
+      gap: 0;
+      padding: 0;
+      background: #fffdf8;
+      position: relative;
+      overflow: hidden;
+      min-height: 0;
+    }
+    .magazine-page {
+      --content-left: 20px;
+      --content-right: 20px;
+      min-width: 0;
+      min-height: 0;
+      height: 100%;
+      padding: 18px var(--content-right) 28px var(--content-left);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      position: relative;
+      background: #fffdf8;
+      overflow: hidden;
+    }
+    .magazine-page:first-child { --content-right: 24px; border-right: 1px solid #d8d2c9; }
+    .magazine-page:last-child { --content-left: 24px; }
+    .magazine-page::before,
+    .magazine-page::after {
+      content: "";
+      position: absolute;
+      pointer-events: none;
+    }
+    .magazine-page::before { inset: 9px 10px 7px; border: 1px dashed var(--safe-line); }
+    .magazine-page::after { inset: 18px var(--content-right) 11px var(--content-left); border: 1px dotted var(--content-line); }
+    .magazine-spread > .guide-system { display: none; }
+    .magazine-runhead,
+    .magazine-folio { display: flex; justify-content: space-between; color: #79736a; font-size: 6px; line-height: 1; text-transform: uppercase; }
+    .magazine-runhead { padding-bottom: 5px; border-bottom: 1px solid #c9c2b8; }
+    .magazine-folio { position: absolute; left: var(--content-left); right: var(--content-right); bottom: 13px; height: 10px; margin: 0; padding-top: 5px; border-top: 1px solid #c9c2b8; }
+    .magazine-page:first-child .magazine-folio span:last-child { order: -1; }
+    .magazine-headline { display: grid; gap: 4px; margin: auto 0; }
+    .magazine-headline i { display: block; height: 9px; width: 92%; background: #302d29; }
+    .magazine-headline i:nth-child(2) { width: 78%; }
+    .magazine-headline i:nth-child(3) { width: 61%; }
+    .magazine-byline { width: 35%; height: 4px; background: #938a7f; }
+    .magazine-columns { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; min-height: 0; flex: 1 1 0; overflow: hidden; }
+    .magazine-column { min-width: 0; overflow: hidden; color: #625d55; font: 6px/1.25 Georgia, serif; }
+    .magazine-column p { margin: 0 0 7px; color: inherit; font: inherit; }
+    .magazine-pull { margin: 2px 0; padding: 2px 4px; color: #ad1720; font: 750 7px/1 Inter, ui-sans-serif, sans-serif; text-align: center; text-transform: uppercase; flex: 0 0 auto; max-height: 20px; overflow: hidden; }
+    .magazine-visual { min-height: 74px; flex: 0 0 40%; border: 1px solid #aaa397; background: repeating-linear-gradient(135deg,#d8d3c9 0 10px,#c8c2b7 10px 20px); display: grid; place-items: center; color: #625d55; font-size: 7px; font-weight: 700; }
+    .magazine-caption { color: #625d55; font: 6px/1.35 Georgia,serif; }
+    .magazine-evidence { display: grid; grid-template-columns: .8fr 1.2fr; gap: 8px; min-height: 0; flex: 1 1 0; overflow: hidden; }
+    .magazine-evidence .magazine-columns { grid-template-columns: 1fr 1fr; }
+    .magazine-evidence .evidence-image { display: flex; flex-direction: column; gap: 4px; min-height: 0; }
+    .magazine-evidence .evidence-image .magazine-visual { flex: 1 1 0; min-height: 0; }
+    .magazine-evidence .evidence-image .magazine-caption { flex: none; }
+    .magazine-thesis { margin: auto 0 0; text-align: center; color: #302d29; font: 700 19px/1.12 Georgia, serif; }
+    .magazine-thesis + .magazine-byline { align-self: center; margin-top: 8px; }
+    .magazine-intro { align-self: flex-end; width: 62%; margin: 18% 0 16%; }
+    .magazine-image-plate { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; }
+    .magazine-image-plate .magazine-visual { flex: 1 1 0; min-height: 0; }
+    .magazine-image-plate .magazine-caption { flex: none; margin-top: 5px; }
+    .magazine-statement-grid { display: grid; grid-template-columns: 42% 1fr; grid-template-rows: minmax(0, 1fr) 90px; gap: 8px 10px; flex: 1 1 0; min-height: 0; }
+    .magazine-statement-grid .magazine-pull { align-self: center; max-height: none; margin: 0; padding: 0; font-size: 13px; line-height: 1.08; }
+    .magazine-statement-grid .magazine-column { align-self: stretch; }
+    .magazine-statement-grid .magazine-visual { grid-column: 2; min-height: 0; flex: none; }
+    .magazine-followup-grid { display: grid; grid-template-columns: 1fr 42%; gap: 10px; flex: 1 1 0; min-height: 0; }
+    .magazine-followup-grid .magazine-column { align-self: stretch; }
+    .magazine-followup-grid .evidence-image { display: flex; flex-direction: column; align-self: start; gap: 5px; }
+    .magazine-followup-grid .evidence-image .magazine-visual { height: 100px; min-height: 0; flex: none; }
+    .magazine-opener .magazine-page:first-child { justify-content: center; }
+    .magazine-opener .magazine-page:last-child { justify-content: center; }
+    .magazine-guides { position: absolute; inset: 0; pointer-events: none; z-index: 4; }
+    .magazine-guides::before { content: "GUTTER SAFE ZONE"; position: absolute; top: 4px; bottom: 4px; left: 50%; width: 20px; transform: translateX(-50%); border-left: 1px dashed #827c73; border-right: 1px dashed #827c73; color: #625d55; font-size: 5px; writing-mode: vertical-rl; text-align: center; background: rgba(130,124,115,.08); }
+    .guide-system {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      pointer-events: none;
+    }
+    .guide-system span {
+      position: absolute;
+      display: block;
+      pointer-events: none;
+    }
+    .guide-system span::before { display: none; }
+    .bleed-line {
+      inset: -7px;
+      border: 1px dashed var(--bleed-line);
+    }
+    .trim-line {
+      display: none;
+      inset: 0;
+      border: 1px solid var(--trim-line);
+    }
+    .safe-line {
+      inset: var(--safe-inset-y) var(--safe-inset-x);
+      border: 1px dashed var(--safe-line);
+    }
+    .content-line {
+      inset: var(--content-inset-y) var(--content-inset-x);
+      border: 1px dotted var(--content-line);
+    }
+    .mode-label {
+      position: static;
+      display: block;
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 9px;
+      line-height: 1.2;
+      font-weight: 500;
+      text-transform: uppercase;
+      pointer-events: none;
+    }
+    .bleed-no .bleed-line { display: none; }
+    .bleed-soft { --safe-inset-y: 7%; --safe-inset-x: 7%; --content-inset-y: 11%; --content-inset-x: 11%; }
+    .bleed-edge { --safe-inset-y: 8%; --safe-inset-x: 8%; --content-inset-y: 11%; --content-inset-x: 11%; }
+    .slide.bleed-soft,
+    .slide.bleed-edge { padding: max(64px, 12%); }
+    .slide.social-page.bleed-edge { padding: 0; --safe-inset-y: 4%; --safe-inset-x: 8%; --content-inset-y: 6%; --content-inset-x: 9%; }
+    .bleed-edge .bleed-line {
+      border-right-width: 2px;
+      border-top-width: 2px;
+    }
+    .bleed-full .safe-line {
+      border-style: solid;
+      background: rgba(255, 250, 243, .08);
+    }
+    .bleed-full { --safe-inset-y: 10%; --safe-inset-x: 10%; --content-inset-y: 14%; --content-inset-x: 14%; }
+    .bleed-print {
+      overflow: visible;
+    }
+    .bleed-print .bleed-line {
+      inset: -10px;
+      border-width: 2px;
+    }
+    .slide::before,
+    .slide::after { content: none; }
+    .img, .txt, .label, .chip, .mini, .thumb, .frame {
+      border-radius: 0;
+      min-width: 0;
+      min-height: 0;
+    }
+    .img {
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.18) 25%, transparent 25%, transparent 50%, rgba(255,255,255,.18) 50%, rgba(255,255,255,.18) 75%, transparent 75%, transparent),
+        linear-gradient(135deg, var(--image), var(--image-dark));
+      background-size: 16px 16px, cover;
+      border: 1px solid #aaa397;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #4d4942;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .img::before { content: attr(data-label); }
+    .txt {
+      background: var(--text-bg);
+      border: 1px solid #e0d9ce;
+      color: var(--text);
+      padding: 6px;
+      overflow: hidden;
+      font-size: 9px;
+      line-height: 1.25;
+      position: relative;
+    }
+    .txt::before { display: none; }
+    .txt::before,
+    .chip::before,
+    .label::before {
+      content: attr(data-label);
+      display: block;
+      color: #7b7166;
+      font-size: 7px;
+      line-height: 1;
+      margin-bottom: 3px;
+      font-weight: 750;
+      text-transform: uppercase;
+    }
+    .txt.caption { background: var(--caption-bg); }
+    .txt.meta { background: var(--meta-bg); }
+    .txt strong {
+      display: block;
+      color: var(--ink);
+      font-size: 10px;
+      line-height: 1.15;
+      margin-bottom: 3px;
+      font-weight: 650;
+    }
+    .txt p {
+      margin: 0;
+      color: var(--text);
+      font-size: inherit;
+      line-height: inherit;
+    }
+    .label {
+      background: #eee3d7;
+      border: 1px solid #d8c9b7;
+      color: #6b5b4d;
+      font-size: 8px;
+      padding: 5px;
+      min-height: 18px;
+    }
+    .chip {
+      background: var(--image-dark);
+      border: 1px solid #7f786e;
+      color: #fff;
+      height: 24px;
+      padding: 4px;
+      font-size: 7px;
+      text-transform: uppercase;
+    }
+    .hero-opener { grid-template-columns: 7fr 4fr; grid-template-rows: 1fr 1fr 1fr; }
+    .hero-opener .hero { grid-row: 1 / 4; }
+    .hero-opener .rail-title { grid-column: 2; align-self: start; }
+    .hero-opener .rail-text { grid-column: 2; }
+    .hero-opener .rail-img { grid-column: 2; }
+    .two-column { grid-template-columns: 5fr 7fr; grid-template-rows: 1fr 1fr; }
+    .two-column .copy { grid-row: 1 / 3; }
+    .two-column .copy { padding: 4px; font-size: 8px; line-height: 1.2; }
+    .two-column .copy strong { font-size: 9px; }
+    .moodboard { grid-template-columns: 1.2fr 1fr 1fr .35fr; grid-template-rows: 1fr 1fr; }
+    .moodboard .span { grid-column: 1; grid-row: 1 / 3; }
+    .moodboard .material { grid-column: 2; grid-row: 1; }
+    .moodboard .detail { grid-column: 3; grid-row: 1; }
+    .moodboard .chips { grid-column: 4; grid-row: 1 / 3; display: grid; grid-template-rows: repeat(5, minmax(0, 1fr)); gap: 4px; }
+    .moodboard .chips .chip { height: 18px; padding: 2px; }
+    .moodboard .texture { grid-column: 2; grid-row: 2; }
+    .moodboard .plan-ref { grid-column: 3; grid-row: 2; }
+    .caption-rail { grid-template-columns: 8fr 3fr; grid-template-rows: 1fr 1fr; }
+    .caption-rail .field { grid-row: 1 / 3; display: grid; grid-template-columns: 2fr 1fr; gap: var(--gap); }
+    .caption-rail .field .big { grid-row: 1 / 3; }
+    .caption-rail .rail { grid-row: 1 / 3; display: grid; grid-template-rows: repeat(5, 1fr); gap: 8px; }
+    .caption-rail .txt.caption { padding: 1px; font-size: 7px; line-height: 1; }
+    .caption-rail .txt.caption p { font-size: 6px; line-height: 1; }
+    .proof { grid-template-columns: 8fr 4fr; grid-template-rows: 20px repeat(3, minmax(0, 1fr)); }
+    .proof .note { grid-column: 1 / 3; }
+    .proof .main { grid-row: 2 / 5; }
+    .proof .note { padding: 0 3px; display: flex; align-items: center; font-size: 7px; line-height: 1; }
+    .proof .note p { font-size: 7px; line-height: 1; }
+    .strip { grid-template-columns: repeat(5, 1fr); grid-template-rows: .3fr 1fr .18fr; }
+    .strip .title { grid-column: 1 / 6; }
+    .strip .caption { grid-column: 1 / 6; }
+    .strip .title { padding: 3px 6px; font-size: 8px; line-height: 1.1; }
+    .strip .title strong { font-size: 9px; margin: 0; }
+    .dense { grid-template-columns: repeat(12, 1fr); grid-template-rows: repeat(6, 1fr); }
+    .dense .a { grid-column: 1 / 6; grid-row: 1 / 4; }
+    .dense .b { grid-column: 6 / 10; grid-row: 1 / 3; }
+    .dense .c { grid-column: 10 / 13; grid-row: 1 / 3; }
+    .dense .d { grid-column: 6 / 13; grid-row: 3 / 5; }
+    .dense .e { grid-column: 1 / 4; grid-row: 4 / 7; }
+    .dense .f { grid-column: 4 / 8; grid-row: 5 / 7; }
+    .dense .g { grid-column: 8 / 13; grid-row: 5 / 7; }
+    .dense .b,
+    .dense .e,
+    .dense .g { padding: 4px; }
+    .dense .b { font-size: 8px; line-height: 1.15; }
+    .dense .b strong { font-size: 9px; }
+    .dense .e,
+    .dense .g { font-size: 8px; line-height: 1.15; }
+    .masonry { grid-template-columns: repeat(6, 1fr); grid-template-rows: repeat(4, 1fr); }
+    .masonry .a { grid-column: 1 / 4; grid-row: 1 / 3; }
+    .masonry .b { grid-column: 4 / 7; grid-row: 1 / 2; }
+    .masonry .c { grid-column: 4 / 6; grid-row: 2 / 4; }
+    .masonry .d { grid-column: 6 / 7; grid-row: 2 / 4; }
+    .masonry .e { grid-column: 1 / 3; grid-row: 3 / 5; }
+    .masonry .f { grid-column: 3 / 7; grid-row: 4 / 5; }
+    .system-sheet { grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(5, 1fr); }
+    .system-sheet .txt { grid-column: 1 / 3; grid-row: 1 / 2; }
+    .system-sheet .txt { padding: 2px 5px; font-size: 8px; line-height: 1; }
+    .system-sheet .txt strong { font-size: 8px; line-height: 1; margin: 0; }
+    .mini {
+      border: 1px solid #cfc8bd;
+      background: #f2eee7;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      gap: 3px;
+      padding: 5px;
+      position: relative;
+    }
+    .mini::before {
+      content: none;
+    }
+    .mini i:first-child { margin-top: 0; }
+    .mini i { display: block; background: var(--image-dark); opacity: .65; }
+    .deck-sheet { grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: repeat(3, minmax(0, 1fr)); padding: max(68px, 12%); }
+    .deck-sheet .thumb { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: 14px minmax(0, 1fr); gap: 4px; padding: 4px; border: 1px solid #d8d1c7; background: #fffaf3; overflow: hidden; }
+    .deck-sheet .thumb .bar { grid-column: 1 / 3; background: var(--text-bg); border: 1px solid #e0d9ce; font-size: 7px; line-height: 1; padding: 2px; color: #6b635a; text-transform: uppercase; }
+    .deck-sheet .thumb .txt.meta { padding: 0; overflow: hidden; font-size: 0; line-height: 0; border: 0; }
+    .deck-sheet .thumb .img::before { content: none; }
+    .vertical-stack { aspect-ratio: 4 / 5; grid-template-columns: 1fr; grid-template-rows: repeat(4, 1fr); }
+    .vertical-stack { padding: max(68px, 14%); }
+    .vertical-stack .txt { overflow-wrap: anywhere; font-size: 8px; }
+    .vertical-stack .board { display: grid; grid-template-columns: 1.4fr 1fr .6fr; gap: var(--gap); padding: 8px; border: 1px solid #d8d1c7; background: #fffaf3; }
+    .brand-board { aspect-ratio: 4 / 3; grid-template-columns: repeat(6, 1fr); grid-template-rows: repeat(4, 1fr); padding: max(68px, 12%); }
+    .brand-board .type { grid-column: 1 / 4; grid-row: 1 / 3; }
+    .brand-board .palette { grid-column: 4 / 7; grid-row: 1 / 2; display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: auto 1fr; align-content: center; gap: 6px 8px; }
+    .brand-board .palette::before { content: "PALETTE"; grid-column: 1 / -1; color: #7b7166; font-size: 7px; line-height: 1; font-weight: 750; text-transform: uppercase; }
+    .brand-board .logo { grid-column: 4 / 7; grid-row: 2 / 3; }
+    .brand-board .logo { padding: 4px; }
+    .brand-board .logo strong { font-size: 8px; margin: 0; }
+    .brand-board .mock-a { grid-column: 1 / 3; grid-row: 3 / 5; }
+    .brand-board .mock-b { grid-column: 3 / 5; grid-row: 3 / 5; }
+    .brand-board .rules { grid-column: 5 / 7; grid-row: 3 / 5; }
+    .brand-board .logo { padding: 4px; }
+    .brand-board .rules { padding: 4px; font-size: 8px; line-height: 1.15; }
+    .brand-board .rules p { font-size: 8px; line-height: 1.15; }
+    .deliverables { aspect-ratio: 4 / 3; grid-template-columns: 1fr 1fr .8fr; grid-template-rows: repeat(3, 1fr); }
+    .deliverables .note { grid-column: 3; grid-row: 1 / 4; padding: 4px; font-size: 8px; line-height: 1.1; }
+    .deliverables .note strong { font-size: 8px; margin-bottom: 2px; }
+    .deliverables .note p { font-size: 8px; line-height: 1.1; }
+    .deliverables .frame { border: 1px solid #d8d1c7; background: #fffaf3; padding: 4px; display: grid; grid-template-rows: minmax(0, 1fr) 14px; gap: 4px; }
+    .deliverables .frame .label { min-height: 14px; padding: 1px 3px; }
+    .slide.caption-rail.bleed-soft,
+    .slide.proof.bleed-soft { padding: max(64px, 12%); }
+    .moodboard .img { font-size: 8px; }
+    .moodboard .img:nth-last-child(2),
+    .moodboard .img:last-child { font-size: 6px; }
+    @media (max-width: 700px) {
+      header { padding: 28px 20px 18px; }
+      main { grid-template-columns: 1fr; padding: 20px; }
+      .editorial-family { grid-template-columns: 1fr; }
+      .magazine-family { grid-template-columns: 1fr; }
+      .magazine-spread { min-width: 460px; }
+      .magazine-family article, .social-family article { overflow-x: auto; }
+      .social-family > article > .social-page { min-width: 550px; }
+      .social-variants .slide { min-width: 440px; }
+    }
+    @media (max-width: 420px) {
+      .editorial-page { gap: 9px; }
+      .editorial-title-lines { font-size: 18px; }
+      .editorial-deck { font-size: 8px; }
+      .editorial-image { min-height: 60px; }
+      .editorial-section-title { font-size: 11px; }
+      .editorial-copy-lines { font-size: 7px; }
+      .editorial-parallel { flex-basis: 52px; gap: 10px; }
+      .editorial-wide-image { height: 64px; min-height: 55px; flex-basis: 64px; }
+      .editorial-columns, .editorial-bottom-modules, .editorial-modular-grid { gap: 10px; }
+      .editorial-quote { font-size: 9px; padding: 5px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Folio Reference Layout Previews</h1>
+    <p>Gray wireframes for translating references into reusable portfolio and editorial structures. These previews describe structure only; they do not copy source images, text, or template assets.</p>
+    <p class="preview-revision">Wireframe library r2026.10.07-18 (draft) · Updated 2026-10-07 · Published Folio skill: 1.0.17</p>
+    <p>Each layout below records its role, first repository date, and its own wireframe revision. Legacy v1.0 marks the first cataloged baseline; it is not a claim of historical version numbering.</p>
+    <div class="legend">
+      <span>IMAGE = image/photo area</span>
+      <span>TITLE/BODY = text hierarchy</span>
+      <span>CAPTION = image explanation</span>
+      <span>META = project data</span>
+      <span>SWATCH = material/color chip</span>
+      <span>MINI LAYOUT = reusable composition cell</span>
+      <span>WHITESPACE = dotted cream margins/gutters</span>
+      <span class="line-key key-trim">BLACK SOLID / TRIM = outer page edge</span>
+      <span class="line-key key-safe">GREEN DASHED / SAFE = live text limit</span>
+      <span class="line-key key-content">BLUE DOTTED / CONTENT = preferred alignment frame</span>
+      <span class="line-key key-bleed">RED DASHED / BLEED = outside trim when used</span>
+      <span class="line-key key-gutter">GUTTER = binding clearance</span>
+    </div>
+  </header>
+  <main>
+    <section class="portrait-editorial-group" aria-labelledby="portrait-editorial-group-title">
+    <h2 id="portrait-editorial-group-title">Portrait Editorial Pages</h2>
+    <section class="essay-family" aria-labelledby="essay-family-title">
+      <h3 id="essay-family-title">Essay · four-page reading sequence</h3>
+      <p>One A4 article across an opener, continued argument, image-led turn, and conclusion. All copy and imagery are placeholders; page roles can be repeated when the article needs more space.</p>
+      <article>
+        <h2>portrait-magazine-essay · no-bleed</h2>
+        <div class="slide portrait-essay bleed-no">
+          <div class="guide-system" aria-hidden="true"><span class="safe-line"></span><span class="content-line"></span></div>
+          <div class="essay-runhead"><span>PUBLICATION / ISSUE</span><span>SECTION</span><span>FOLIO</span></div>
+          <div class="essay-title"><small>EDITORIAL / FEATURE</small><h3>Lorem ipsum <em>dolor</em> sit amet?</h3><p>A short supporting subtitle goes here.</p></div>
+          <div class="essay-credits"><span>WRITTEN BY<br>NAME / DATE</span><span>PHOTOGRAPHY<br>IMAGE CREDIT</span><span>LOCATION<br>PLACE / REGION</span></div>
+          <div class="essay-image">WIDE IMAGE</div>
+          <div class="essay-caption">FIGURE 01 / IMAGE CAPTION PLACEHOLDER</div>
+          <div class="essay-columns">
+            <div><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer vitae arcu sed neque gravida porttitor.</p><p>Donec euismod sapien vitae dictum posuere. Vivamus at neque vitae sem.</p></div>
+            <div><p>Praesent vitae magna at lectus consequat tristique. Donec euismod sapien vitae dictum posuere.</p><p>Nulla facilisi. Mauris interdum lorem a porta cursus.</p></div>
+            <div><p>Quisque sit amet nibh quis arcu tincidunt varius. Curabitur placerat magna nec aliquet consequat.</p><p>Aliquam erat volutpat. Morbi tempor nibh sit amet velit consequat.</p></div>
+          </div>
+          <div class="essay-quote">“Lorem ipsum dolor sit amet, consectetur adipiscing elit.”<small>QUOTE / ATTRIBUTION PLACEHOLDER</small></div>
+          <div class="essay-footer"><span>PUBLICATION / EDITION</span><span>01</span></div>
+        </div>
+      </article>
+      <article>
+        <h2>portrait-essay-continuation · body + side note · no-bleed</h2>
+        <div class="slide portrait-essay essay-followup essay-page-two bleed-no">
+          <div class="guide-system" aria-hidden="true"><span class="safe-line"></span><span class="content-line"></span></div>
+          <div class="essay-runhead"><span>PUBLICATION / ISSUE</span><span>SECTION</span><span>FOLIO</span></div>
+          <div class="essay-section-label">ARTICLE / CONTINUED<strong>Dolor sit amet</strong></div>
+          <div class="essay-continuation-body">
+            <div class="essay-fill"></div>
+            <div class="essay-rail-column"><div class="essay-fill"></div><div class="essay-rail-note">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</div><div class="essay-fill"></div></div>
+          </div>
+          <div class="essay-evidence-strip"><div class="essay-image">IMAGE / DETAIL</div><span>FIGURE 02 / SUPPORTING DETAIL<br>CAPTION / SOURCE PLACEHOLDER</span></div>
+          <div class="essay-footer"><span>PUBLICATION / EDITION</span><span>02</span></div>
+        </div>
+      </article>
+      <article>
+        <h2>portrait-essay-image-break · evidence + text · no-bleed</h2>
+        <div class="slide portrait-essay essay-followup essay-page-three bleed-no">
+          <div class="guide-system" aria-hidden="true"><span class="safe-line"></span><span class="content-line"></span></div>
+          <div class="essay-runhead"><span>PUBLICATION / ISSUE</span><span>SECTION</span><span>FOLIO</span></div>
+          <div class="essay-section-label">ARTICLE / EVIDENCE<strong>Consectetur adipiscing elit</strong></div>
+          <div class="essay-short-copy"><div class="essay-fill"></div><div class="essay-fill"></div></div>
+          <div class="essay-image">EVIDENCE IMAGE</div>
+          <div class="essay-caption">FIGURE 03 / IMAGE CAPTION AND SOURCE PLACEHOLDER</div>
+          <div class="essay-evidence-copy"><div class="essay-fill"></div><div class="essay-fill"></div></div>
+          <div class="essay-footer"><span>PUBLICATION / EDITION</span><span>03</span></div>
+        </div>
+      </article>
+      <article>
+        <h2>portrait-essay-conclusion · synthesis + sources · no-bleed</h2>
+        <div class="slide portrait-essay essay-followup essay-page-four bleed-no">
+          <div class="guide-system" aria-hidden="true"><span class="safe-line"></span><span class="content-line"></span></div>
+          <div class="essay-runhead"><span>PUBLICATION / ISSUE</span><span>SECTION</span><span>FOLIO</span></div>
+          <div class="essay-section-label">ARTICLE / CONCLUSION<strong>Sed at consequat nunc</strong></div>
+          <div class="essay-conclusion-copy"><div class="essay-fill"></div><div class="essay-fill"></div></div>
+          <div class="essay-conclusion-statement">“Lorem ipsum dolor sit amet, consectetur adipiscing elit.”</div>
+          <div class="essay-sources"><span>SOURCES / REFERENCES<br>01 / SOURCE PLACEHOLDER<br>02 / SOURCE PLACEHOLDER</span><span>AUTHOR / CREDIT<br>NAME / DATE</span></div>
+          <div class="essay-footer"><span>PUBLICATION / EDITION</span><span>04</span></div>
+        </div>
+      </article>
+    </section>
+    <section class="editorial-family" aria-labelledby="editorial-family-title">
+      <h3 id="editorial-family-title">Longform · three structural variants</h3>
+      <p>Portrait-page structures for continuous reading. Neutral Lorem Ipsum shows column density; headings, images, and captions remain placeholders.</p>
+      <article>
+        <h2>editorial-opener · argument + lead image · no-bleed</h2>
+        <div class="slide editorial-page bleed-no">
+          <div class="guide-system" aria-hidden="true"><span class="bleed-line"></span><span class="trim-line"></span><span class="safe-line"></span><span class="content-line"></span></div>
+          <div class="editorial-running-head"><span>PUBLICATION / SERIES</span><span>ISSUE</span></div>
+          <div class="editorial-title-block"><div class="editorial-title-lines">Lorem ipsum dolor sit amet</div><div class="editorial-deck">A short supporting subtitle goes here.</div></div>
+          <div class="editorial-image"></div>
+          <div class="editorial-columns">
+            <div class="editorial-column"><div class="editorial-section-title">Consectetur adipiscing</div><div class="editorial-copy-lines" data-lorem-fill></div></div>
+            <div class="editorial-column"><div class="editorial-section-head"><div class="editorial-index">01</div><div class="editorial-section-title-group"><div class="editorial-section-title">Praesent vitae magna</div><div class="editorial-deck">Section note / placeholder</div></div></div><div class="editorial-copy-lines" data-lorem-fill></div></div>
+          </div>
+          <div class="editorial-folio"><span>RUNNING FOOTER</span><span>01</span></div>
+        </div>
+      </article>
+      <article>
+        <h2>editorial-image-break · chapter + image · no-bleed</h2>
+        <div class="slide editorial-page bleed-no">
+          <div class="guide-system" aria-hidden="true"><span class="bleed-line"></span><span class="trim-line"></span><span class="safe-line"></span><span class="content-line"></span></div>
+          <div class="editorial-running-head"><span>PUBLICATION / SERIES</span><span>ISSUE</span></div>
+          <div class="editorial-section-headline"><div class="editorial-index">02</div><div class="editorial-section-title-group"><div class="editorial-section-title">Lorem ipsum dolor sit amet</div><div class="editorial-deck">Chapter / evidence</div></div></div>
+          <div class="editorial-parallel">
+            <div class="editorial-copy-lines" data-lorem-fill></div>
+            <div class="editorial-copy-lines" data-lorem-fill></div>
+          </div>
+          <div class="editorial-image editorial-wide-image"></div>
+          <div class="editorial-caption">FIGURE 02 / IMAGE CAPTION PLACEHOLDER</div>
+          <div class="editorial-bottom-modules">
+            <div class="editorial-column"><div class="editorial-quote">“Lorem ipsum dolor sit amet, consectetur adipiscing elit.”</div><div class="editorial-copy-lines" data-lorem-fill></div></div>
+            <div class="editorial-copy-lines" data-lorem-fill></div>
+          </div>
+          <div class="editorial-folio"><span>RUNNING FOOTER</span><span>02</span></div>
+        </div>
+      </article>
+      <article>
+        <h2>editorial-modular-rail · narrative + modules · no-bleed</h2>
+        <div class="slide editorial-page bleed-no">
+          <div class="guide-system" aria-hidden="true"><span class="bleed-line"></span><span class="trim-line"></span><span class="safe-line"></span><span class="content-line"></span></div>
+          <div class="editorial-running-head"><span>PUBLICATION / SERIES</span><span>ISSUE</span></div>
+          <div class="editorial-section-headline"><div class="editorial-index">03</div><div class="editorial-section-title-group"><div class="editorial-section-title">Lorem ipsum dolor sit amet</div><div class="editorial-deck">Narrative / modules</div></div></div>
+          <div class="editorial-modular-grid">
+            <div class="editorial-main-story"><div class="editorial-copy-lines" data-lorem-fill></div><div class="editorial-quote">“Lorem ipsum dolor sit amet, consectetur adipiscing elit.”</div><div class="editorial-copy-lines" data-lorem-fill></div></div>
+            <div class="editorial-modules">
+              <div class="editorial-module"><div class="editorial-index">A</div><div><div class="editorial-mini-title">Context</div><div class="editorial-copy-lines">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</div></div></div>
+              <div class="editorial-module"><div class="editorial-index">B</div><div><div class="editorial-mini-title">Detail</div><div class="editorial-copy-lines">Praesent vitae magna at lectus consequat tristique.</div></div></div>
+              <div class="editorial-module"><div class="editorial-index">C</div><div><div class="editorial-mini-title">Evidence</div><div class="editorial-copy-lines">Donec euismod sapien vitae dictum posuere.</div></div></div>
+            </div>
+          </div>
+          <div class="editorial-folio"><span>RUNNING FOOTER</span><span>03</span></div>
+        </div>
+      </article>
+    </section>
+    <section class="social-family" aria-labelledby="social-family-title">
+      <h3 id="social-family-title">Format adaptation · page format and image role</h3>
+      <p>Keep the article's information hierarchy when the source-image ratio changes. Reflow at 3:4 or A4; use a separate cover and continuation only when the uncropped image is the priority. Copy is neutral placeholder text.</p>
+      <article>
+        <h2>portrait-social-feature · image / title / three columns / conclusion · edge-bleed image</h2>
+        <div class="photo-ratio-options" aria-label="Image field ratio options">
+          <span class="ratio-16x9"><i aria-hidden="true"></i>16:9 preferred</span>
+          <span class="ratio-3x2"><i aria-hidden="true"></i>3:2</span>
+          <span class="ratio-4x3"><i aria-hidden="true"></i>4:3</span>
+          <span class="ratio-square"><i aria-hidden="true"></i>1:1 square</span>
+        </div>
+        <p class="photo-ratio-note">The page is 4:5; its full-width image field is 16:9. The other icons are source ratios to crop by focal point, not reasons to delete the article. If the subject cannot be cropped, use the cover + continuation pair below.</p>
+        <div class="slide social-page bleed-edge">
+          <div class="guide-system" aria-hidden="true"><span class="safe-line"></span><span class="content-line"></span></div>
+          <div class="social-photo"><span class="photo-meta-start">SERIES / FEATURE</span>LEAD IMAGE<span class="photo-meta-end">PHOTO / CREDIT</span><span class="photo-ratio-title">16:9 PREFERRED</span></div>
+          <div class="social-title-row">
+            <h3 class="social-headline">Lorem ipsum, <em>dolor sit amet</em>.</h3>
+            <div class="social-rail"><strong>EDITORIAL / 01</strong>A brief introduction to the article's central idea.</div>
+          </div>
+          <div class="social-columns">
+            <div class="social-column"><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer vitae arcu sed neque gravida porttitor. Donec euismod sapien vitae dictum posuere.</p><p>Vivamus at neque vitae sem consequat faucibus. Praesent vitae magna at lectus consequat tristique.</p><div class="social-pull">Lorem ipsum dolor sit amet.</div><p>Aenean suscipit lectus sed sapien facilisis. Nulla facilisi. Mauris interdum lorem a porta cursus.</p></div>
+            <div class="social-column"><p>Praesent vitae magna at lectus consequat tristique. Donec euismod sapien vitae dictum posuere. Sed at consequat nunc.</p><p>Nulla facilisi. Mauris interdum lorem a porta cursus. Integer vitae arcu sed neque gravida porttitor.</p><p>Aliquam erat volutpat. Vestibulum ante ipsum primis in faucibus orci luctus.</p></div>
+            <div class="social-column"><p>Quisque sit amet nibh quis arcu tincidunt varius. Curabitur placerat magna nec aliquet consequat.</p><p>Integer vitae arcu sed neque gravida porttitor. Aliquam erat volutpat. Donec euismod sapien vitae dictum posuere.</p><p>Morbi tempor nibh sit amet velit consequat. Vivamus at neque vitae sem.</p></div>
+          </div>
+          <div class="social-conclusion"><strong>Lorem ipsum, <em>consectetur adipiscing</em>.</strong><small>ARTICLE / SERIES<br>01</small></div>
+        </div>
+      </article>
+      <div class="social-variants">
+        <article>
+          <h2>portrait-adaptive-article-3x4 · image / title / two columns · edge image</h2>
+          <p class="photo-ratio-note">1080 × 1440 example. Reflow the article to two columns; retain comparable copy instead of shortening it to make room for an uncropped source.</p>
+          <div class="slide vertical-page article-3x4">
+            <div class="guide-system" aria-hidden="true"><span class="safe-line"></span><span class="content-line"></span></div>
+            <div class="vertical-photo">IMAGE FIELD<span>FOCAL CROP</span></div>
+            <div class="vertical-head"><span class="mast">FOLIO / FIELD NOTE</span><h3>Lorem ipsum<br>dolor sit amet.</h3></div>
+            <div class="vertical-copy" data-lorem-fill><div></div><div></div></div>
+            <div class="vertical-closing"><strong>Lorem ipsum dolor sit amet.</strong><small>02 / ARTICLE</small></div>
+          </div>
+        </article>
+        <article>
+          <h2>portrait-image-led-a4 · running head / image / three columns · no-bleed</h2>
+          <p class="photo-ratio-note">210 × 297 mm example. A print page reflows the article, adds a caption and folio, and keeps image and text within the trim.</p>
+          <div class="slide vertical-page article-a4">
+            <div class="guide-system" aria-hidden="true"><span class="safe-line"></span><span class="content-line"></span></div>
+            <div class="vertical-runhead"><span>FOLIO / JOURNAL</span><span>ISSUE 01</span></div>
+            <div class="vertical-head"><span class="mast">FEATURE / 01</span><h3>Lorem ipsum<br>dolor sit amet.</h3></div>
+            <div class="vertical-photo">PRINT IMAGE</div>
+            <div class="vertical-caption">FIG. 01 / Lorem ipsum dolor sit amet. Image placeholder.</div>
+            <div class="vertical-copy" data-lorem-fill><div></div><div></div><div></div></div>
+            <div class="vertical-footer"><span>FIELD NOTE / ARTICLE</span><span>03</span></div>
+          </div>
+        </article>
+        <article>
+          <h2>portrait-image-cover-pair · uncropped 1:1 cover + full article · two pages</h2>
+          <p class="photo-ratio-note">A square source uses 80% of the 4:5 cover. The article is not deleted: it continues on a separate two-column page.</p>
+          <div class="slide vertical-page cover-page">
+            <div class="vertical-photo">FULL IMAGE<span>1:1 / NO CROP</span></div>
+            <div class="vertical-title"><span class="mast">FOLIO / FIELD NOTE 01</span><h3>Lorem ipsum<br>dolor sit amet.</h3><span class="vertical-footer">01 / COVER</span></div>
+          </div>
+          <div class="slide vertical-page continuation-page">
+            <div class="guide-system" aria-hidden="true"><span class="safe-line"></span><span class="content-line"></span></div>
+            <span class="mast">FOLIO / FIELD NOTE 01</span>
+            <h3>Consectetur adipiscing elit</h3>
+            <div class="vertical-copy" data-lorem-fill><div></div><div></div></div>
+            <div class="vertical-footer"><span>Lorem ipsum dolor sit amet.</span><span>02 / ARTICLE</span></div>
+          </div>
+        </article>
+      </div>
+    </section>
+    </section>
+    <section class="magazine-family" aria-labelledby="magazine-family-title">
+      <h2 id="magazine-family-title">magazine-investigative-feature · facing-page editorial system</h2>
+      <p>Five independent facing-page roles, not a fixed page order. Body copy uses Lorem Ipsum to demonstrate column flow; headlines, pull statements, images, and captions remain placeholders. The center gutter is reserved. L and R mark left and right pages; assign folios when assembling an article.</p>
+      <h3>Special compositions</h3>
+      <article>
+        <h2>magazine-feature-opener · thesis + lead image · no-bleed</h2>
+        <div class="slide magazine-spread magazine-opener bleed-no">
+          <div class="guide-system" aria-hidden="true"><span class="safe-line"></span><span class="content-line"></span></div><div class="magazine-guides" aria-hidden="true"></div>
+          <section class="magazine-page"><div class="magazine-runhead"><span>SECTION / FEATURE</span><span>OPENING</span></div><div class="magazine-headline"><i></i><i></i><i></i></div><div class="magazine-byline"></div><div class="magazine-column"><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer non justo sed urna feugiat volutpat. Vivamus at neque vitae sem consequat faucibus, sed commodo nunc.</p></div><div class="magazine-folio"><span>FEATURE TITLE</span><span>L</span></div></section>
+          <section class="magazine-page"><div class="magazine-runhead"><span>FEATURE TITLE</span><span>IMAGE / CAPTION</span></div><div class="magazine-visual">LEAD IMAGE</div><div class="magazine-caption">CAPTION PLACEHOLDER · SOURCE / DATE</div><div class="magazine-column"><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer non justo sed urna feugiat volutpat. Vivamus at neque vitae sem consequat faucibus.</p></div><div class="magazine-folio"><span>SECTION / ISSUE</span><span>R</span></div></section>
+        </div>
+      </article>
+      <article>
+        <h2>magazine-spacious-opener · quiet thesis + full-height image · no-bleed</h2>
+        <div class="slide magazine-spread bleed-no">
+          <div class="magazine-guides" aria-hidden="true"></div>
+          <section class="magazine-page"><div class="magazine-thesis">THESIS HEADLINE<br>PLACEHOLDER</div><div class="magazine-byline"></div><div class="magazine-intro magazine-column"><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer vitae arcu sed neque gravida porttitor.</p></div><div class="magazine-folio"><span>FEATURE TITLE</span><span>L</span></div></section>
+          <section class="magazine-page"><div class="magazine-image-plate"><div class="magazine-visual">FULL-HEIGHT LEAD IMAGE</div><div class="magazine-caption">IMAGE CREDIT / ISSUE</div></div><div class="magazine-folio"><span>FEATURE TITLE</span><span>R</span></div></section>
+        </div>
+      </article>
+      <article>
+        <h2>magazine-statement-evidence · asymmetrical statement + image · no-bleed</h2>
+        <div class="slide magazine-spread bleed-no">
+          <div class="magazine-guides" aria-hidden="true"></div>
+          <section class="magazine-page"><div class="magazine-statement-grid"><div class="magazine-pull">PULL STATEMENT<br>PLACEHOLDER</div><div class="magazine-column"><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer vitae arcu sed neque gravida porttitor. Donec euismod sapien vitae dictum posuere.</p><p>Praesent vitae magna at lectus consequat tristique.</p></div><div class="magazine-visual">SUPPORTING IMAGE</div></div><div class="magazine-folio"><span>FEATURE TITLE</span><span>L</span></div></section>
+          <section class="magazine-page"><div class="magazine-followup-grid"><div class="magazine-column"><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer vitae arcu sed neque gravida porttitor. Donec euismod sapien vitae dictum posuere.</p><p>Praesent vitae magna at lectus consequat tristique. Vivamus at neque vitae sem consequat faucibus.</p></div><div class="evidence-image"><div class="magazine-visual">EVIDENCE IMAGE</div><div class="magazine-caption">FIGURE / CAPTION PLACEHOLDER</div></div></div><div class="magazine-folio"><span>FEATURE TITLE</span><span>R</span></div></section>
+        </div>
+      </article>
+      <h3>Reusable reading and evidence roles</h3>
+      <article>
+        <h2>magazine-dense-reading · three-column body + pull statement · no-bleed</h2>
+        <div class="slide magazine-spread bleed-no">
+          <div class="guide-system" aria-hidden="true"><span class="safe-line"></span><span class="content-line"></span></div><div class="magazine-guides" aria-hidden="true"></div>
+          <section class="magazine-page"><div class="magazine-runhead"><span>FEATURE / REPORTING</span><span>BODY COPY</span></div><div class="magazine-columns"><div class="magazine-column"><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer non justo sed urna feugiat volutpat.</p><p>Vivamus at neque vitae sem consequat faucibus.</p></div><div class="magazine-column"><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean suscipit lectus sed sapien facilisis.</p><p>Nullam sed tellus id nisi.</p></div><div class="magazine-column"><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras tempor mi sit amet felis malesuada.</p><p>Sed at consequat nunc.</p></div></div><div class="magazine-pull">PULL STATEMENT PLACEHOLDER</div><div class="magazine-folio"><span>FEATURE TITLE</span><span>L</span></div></section>
+          <section class="magazine-page"><div class="magazine-runhead"><span>FEATURE / REPORTING</span><span>BODY COPY</span></div><div class="magazine-columns"><div class="magazine-column"><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse potenti.</p><p>Donec euismod sapien vitae dictum.</p></div><div class="magazine-column"><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam sed tellus id nisi.</p><p>Duis at lacus nec magna.</p></div><div class="magazine-column"><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer non justo sed urna.</p><p>Sed at consequat nunc.</p></div></div><div class="magazine-pull">SECONDARY CALLOUT</div><div class="magazine-folio"><span>FEATURE TITLE</span><span>R</span></div></section>
+        </div>
+      </article>
+      <article>
+        <h2>magazine-image-evidence · image field + text columns · no-bleed</h2>
+        <div class="slide magazine-spread bleed-no">
+          <div class="guide-system" aria-hidden="true"><span class="safe-line"></span><span class="content-line"></span></div><div class="magazine-guides" aria-hidden="true"></div>
+          <section class="magazine-page"><div class="magazine-runhead"><span>FEATURE / EVIDENCE</span><span>IMAGE + NOTE</span></div><div class="magazine-evidence"><div class="magazine-column"><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer non justo sed urna.</p><p>Vivamus at neque vitae sem.</p></div><div class="evidence-image"><div class="magazine-visual">DOCUMENTARY IMAGE</div><div class="magazine-caption">FIGURE 01 · CAPTION PLACEHOLDER</div></div></div><div class="magazine-pull">EVIDENCE-LED STATEMENT</div><div class="magazine-folio"><span>FEATURE TITLE</span><span>L</span></div></section>
+          <section class="magazine-page"><div class="magazine-runhead"><span>FEATURE / EVIDENCE</span><span>IMAGE + NOTES</span></div><div class="magazine-visual">SUPPORTING IMAGE</div><div class="magazine-caption">FIGURE 02 · SOURCE / DATE</div><div class="magazine-columns" style="grid-template-columns:1fr 1fr"><div class="magazine-column"><p>Lorem ipsum dolor sit amet.</p><p>Nullam sed tellus.</p></div><div class="magazine-column"><p>Lorem ipsum dolor sit amet.</p><p>Integer non justo.</p></div></div><div class="magazine-folio"><span>FEATURE TITLE</span><span>R</span></div></section>
+        </div>
+      </article>
+      <div class="magazine-sequence">
+        <h3>Example sequence</h3>
+        <p>Illustrative folios only; reusable roles can recur as the article requires.</p>
+        <ol>
+          <li>02-03: spacious opener</li>
+          <li>04-05: dense reading</li>
+          <li>06-07: dense reading (reused)</li>
+          <li>08-09: statement and evidence</li>
+          <li>10-11: image evidence</li>
+        </ol>
+      </div>
+    </section>
+    <article>
+      <h2>portfolio-opener-hero-rail</h2>
+      <div class="slide hero-opener bleed-edge">
+        <div class="guide-system" aria-hidden="true"><span class="bleed-line"></span><span class="trim-line"></span><span class="safe-line"></span><span class="content-line"></span></div><div class="mode-label">bleed_mode: edge-bleed</div>
+        <div class="img hero" data-label="hero image"></div>
+        <div class="txt rail-title meta" data-label="meta"><strong>Lorem ipsum</strong></div>
+        <div class="txt rail-text"><p>Lorem ipsum.</p></div>
+        <div class="img rail-img" data-label="support image"></div>
+      </div>
+    </article>
+    <article>
+      <h2>case-study-2-column-board</h2>
+      <div class="slide two-column bleed-no">
+        <div class="guide-system" aria-hidden="true"><span class="bleed-line"></span><span class="trim-line"></span><span class="safe-line"></span><span class="content-line"></span></div><div class="mode-label">bleed_mode: no-bleed</div>
+        <div class="txt copy" data-label="body copy"><strong>Lorem ipsum dolor sit amet</strong><p>Lorem ipsum dolor sit amet. Integer vitae arcu.</p></div>
+        <div class="img" data-label="image a"></div>
+        <div class="img" data-label="image b"></div>
+      </div>
+    </article>
+    <article>
+      <h2>moodboard-grid-3x2</h2>
+      <div class="slide moodboard bleed-no">
+        <div class="guide-system" aria-hidden="true"><span class="bleed-line"></span><span class="trim-line"></span><span class="safe-line"></span><span class="content-line"></span></div><div class="mode-label">bleed_mode: no-bleed</div>
+        <div class="img span" data-label="hero mood image"></div>
+        <div class="img material" data-label="material"></div>
+        <div class="img detail" data-label="detail"></div>
+        <div class="chips"><div class="chip"></div><div class="chip"></div><div class="chip"></div><div class="chip"></div><div class="chip"></div></div>
+        <div class="img texture" data-label="texture"></div>
+        <div class="img plan-ref" data-label="plan/ref"></div>
+      </div>
+    </article>
+    <article>
+      <h2>caption-rail-gallery</h2>
+      <div class="slide caption-rail bleed-soft">
+        <div class="guide-system" aria-hidden="true"><span class="bleed-line"></span><span class="trim-line"></span><span class="safe-line"></span><span class="content-line"></span></div><div class="mode-label">bleed_mode: soft-bleed</div>
+        <div class="field">
+          <div class="img big" data-label="main image"></div>
+          <div class="img" data-label="detail"></div>
+          <div class="img" data-label="detail"></div>
+        </div>
+        <div class="rail"><div class="label" data-label="cap 01"></div><div class="txt caption"><p>A.</p></div><div class="label" data-label="cap 02"></div><div class="txt caption"><p>B.</p></div><div class="label" data-label="cap 03"></div></div>
+      </div>
+    </article>
+    <article>
+      <h2>interior-proof-1plus3</h2>
+      <div class="slide proof bleed-soft">
+        <div class="guide-system" aria-hidden="true"><span class="bleed-line"></span><span class="trim-line"></span><span class="safe-line"></span><span class="content-line"></span></div><div class="mode-label">bleed_mode: soft-bleed</div>
+        <div class="txt note caption"><p>Proof note.</p></div>
+        <div class="img main" data-label="main proof image"></div>
+        <div class="img" data-label="support"></div>
+        <div class="img" data-label="support"></div>
+        <div class="img" data-label="support"></div>
+      </div>
+    </article>
+    <article>
+      <h2>strip-narrative-process</h2>
+      <div class="slide strip bleed-no">
+        <div class="guide-system" aria-hidden="true"><span class="bleed-line"></span><span class="trim-line"></span><span class="safe-line"></span><span class="content-line"></span></div><div class="mode-label">bleed_mode: no-bleed</div>
+        <div class="txt title"><strong>Process</strong></div>
+        <div class="img" data-label="step 01"></div><div class="img" data-label="step 02"></div><div class="img" data-label="step 03"></div><div class="img" data-label="step 04"></div><div class="img" data-label="step 05"></div>
+        <div class="label caption" data-label="sequence caption"></div>
+      </div>
+    </article>
+    <article>
+      <h2>dense-presentation-board</h2>
+      <div class="slide dense bleed-no">
+        <div class="guide-system" aria-hidden="true"><span class="bleed-line"></span><span class="trim-line"></span><span class="safe-line"></span><span class="content-line"></span></div><div class="mode-label">bleed_mode: no-bleed</div>
+        <div class="img a" data-label="primary image"></div><div class="txt b"><strong>Key idea</strong><p>Lorem ipsum.</p></div><div class="img c" data-label="detail"></div><div class="img d" data-label="diagram/image"></div><div class="txt e caption"><p>Short annotation.</p></div><div class="img f" data-label="support"></div><div class="txt g meta"><p>3 key signals</p></div>
+      </div>
+    </article>
+    <article>
+      <h2>controlled-masonry-gallery</h2>
+      <div class="slide masonry bleed-soft">
+        <div class="guide-system" aria-hidden="true"><span class="bleed-line"></span><span class="trim-line"></span><span class="safe-line"></span><span class="content-line"></span></div><div class="mode-label">bleed_mode: soft-bleed</div>
+        <div class="img a" data-label="image a"></div><div class="img b" data-label="image b"></div><div class="img c" data-label="image c"></div><div class="img d" data-label="image d"></div><div class="img e" data-label="image e"></div><div class="img f" data-label="image f"></div>
+      </div>
+    </article>
+    <article>
+      <h2>layout-system-sheet</h2>
+      <div class="slide system-sheet bleed-no">
+        <div class="guide-system" aria-hidden="true"><span class="bleed-line"></span><span class="trim-line"></span><span class="safe-line"></span><span class="content-line"></span></div><div class="mode-label">bleed_mode: no-bleed</div>
+        <div class="txt"><strong>Layout system</strong></div>
+        <div class="mini"><i></i><i></i><i></i><i></i></div>
+        <div class="mini"><i></i><i></i><i></i></div>
+        <div class="mini"><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="mini"><i></i><i></i></div>
+        <div class="mini"><i></i><i></i><i></i></div>
+        <div class="mini"><i></i><i></i><i></i><i></i></div>
+        <div class="mini"><i></i><i></i><i></i></div>
+        <div class="mini"><i></i><i></i></div>
+        <div class="mini"><i></i><i></i><i></i><i></i></div>
+        <div class="mini"><i></i><i></i><i></i></div>
+        <div class="mini"><i></i><i></i><i></i></div>
+        <div class="mini"><i></i><i></i></div>
+        <div class="mini"><i></i><i></i><i></i><i></i></div>
+        <div class="mini"><i></i><i></i><i></i></div>
+        <div class="mini"><i></i><i></i></div>
+        <div class="mini"><i></i><i></i><i></i></div>
+        <div class="mini"><i></i><i></i><i></i><i></i></div>
+        <div class="mini"><i></i><i></i></div>
+        <div class="mini"><i></i><i></i><i></i></div>
+        <div class="mini"><i></i><i></i><i></i><i></i></div>
+      </div>
+    </article>
+    <article>
+      <h2>deck-contact-sheet</h2>
+      <div class="slide deck-sheet bleed-no">
+        <div class="guide-system" aria-hidden="true"><span class="bleed-line"></span><span class="trim-line"></span><span class="safe-line"></span><span class="content-line"></span></div><div class="mode-label">bleed_mode: no-bleed</div>
+        <div class="thumb"><div class="bar">slide 01</div><div class="img" data-label="img"></div><div class="txt meta"></div></div>
+        <div class="thumb"><div class="bar">slide 02</div><div class="txt meta"></div><div class="img" data-label="img"></div></div>
+        <div class="thumb"><div class="bar">slide 03</div><div class="img" data-label="img"></div><div class="img" data-label="img"></div></div>
+        <div class="thumb"><div class="bar">slide 04</div><div class="txt meta"></div><div class="txt meta"></div></div>
+        <div class="thumb"><div class="bar">slide 05</div><div class="img" data-label="img"></div><div class="txt meta"></div></div>
+        <div class="thumb"><div class="bar">slide 06</div><div class="img" data-label="img"></div><div class="img" data-label="img"></div></div>
+        <div class="thumb"><div class="bar">slide 07</div><div class="txt meta"></div><div class="img" data-label="img"></div></div>
+        <div class="thumb"><div class="bar">slide 08</div><div class="img" data-label="img"></div><div class="txt meta"></div></div>
+        <div class="thumb"><div class="bar">slide 09</div><div class="txt meta"></div><div class="txt meta"></div></div>
+        <div class="thumb"><div class="bar">slide 10</div><div class="img" data-label="img"></div><div class="img" data-label="img"></div></div>
+        <div class="thumb"><div class="bar">slide 11</div><div class="txt meta"></div><div class="img" data-label="img"></div></div>
+        <div class="thumb"><div class="bar">slide 12</div><div class="img" data-label="img"></div><div class="txt meta"></div></div>
+      </div>
+    </article>
+    <article>
+      <h2>vertical-portfolio-stack</h2>
+      <div class="slide vertical-stack bleed-no">
+        <div class="guide-system" aria-hidden="true"><span class="bleed-line"></span><span class="trim-line"></span><span class="safe-line"></span><span class="content-line"></span></div><div class="mode-label">bleed_mode: no-bleed</div>
+        <div class="board"><div class="img" data-label="hero"></div><div class="txt" data-label="title"><strong>Lorem ipsum</strong></div><div class="img" data-label="detail"></div></div>
+        <div class="board"><div class="txt caption" data-label="caption"><p>Lorem ipsum dolor sit amet.</p></div><div class="img" data-label="image"></div><div class="img" data-label="plan"></div></div>
+        <div class="board"><div class="img" data-label="image"></div><div class="img" data-label="detail"></div><div class="txt caption" data-label="note"><p>Short note.</p></div></div>
+        <div class="board"><div class="img" data-label="image"></div><div class="txt meta" data-label="meta"><p>Sed non risus vitae urna.</p></div><div class="img" data-label="close"></div></div>
+      </div>
+    </article>
+    <article>
+      <h2>brand-guideline-board</h2>
+      <div class="slide brand-board bleed-no">
+        <div class="guide-system" aria-hidden="true"><span class="bleed-line"></span><span class="trim-line"></span><span class="safe-line"></span><span class="content-line"></span></div><div class="mode-label">bleed_mode: no-bleed</div>
+        <div class="txt type"><strong>Typography</strong><p>Dolor sit amet.</p></div>
+        <div class="palette"><div class="chip"></div><div class="chip"></div><div class="chip"></div><div class="chip"></div><div class="chip"></div></div>
+        <div class="txt logo meta"><strong>Brand mark</strong></div>
+        <div class="img mock-a" data-label="application"></div>
+        <div class="img mock-b" data-label="mockup"></div>
+        <div class="txt rules caption"><p>Usage notes.</p></div>
+      </div>
+    </article>
+    <article>
+      <h2>campaign-deliverables-board</h2>
+      <div class="slide deliverables bleed-edge">
+        <div class="guide-system" aria-hidden="true"><span class="bleed-line"></span><span class="trim-line"></span><span class="safe-line"></span><span class="content-line"></span></div><div class="mode-label">bleed_mode: edge-bleed</div>
+        <div class="frame"><div class="img" data-label="deliverable"></div><div class="label" data-label="format"></div></div>
+        <div class="frame"><div class="img" data-label="deliverable"></div><div class="label" data-label="format"></div></div>
+        <div class="txt note"><strong>Campaign notes</strong><p>Lorem ipsum.</p></div>
+        <div class="frame"><div class="img" data-label="deliverable"></div><div class="label" data-label="format"></div></div>
+        <div class="frame"><div class="img" data-label="deliverable"></div><div class="label" data-label="format"></div></div>
+        <div class="frame"><div class="img" data-label="deliverable"></div><div class="label" data-label="format"></div></div>
+        <div class="frame"><div class="img" data-label="deliverable"></div><div class="label" data-label="format"></div></div>
+      </div>
+    </article>
+  </main>
+  <dialog class="preview-focus" aria-labelledby="preview-focus-title">
+    <div class="preview-focus-header"><strong id="preview-focus-title"></strong><button class="preview-focus-close" type="button" aria-label="Close enlarged preview" title="Close enlarged preview">&times;</button></div>
+    <div class="preview-focus-stage"></div>
+  </dialog>
+  <script>
+    const layoutRecords = {
+      "portrait-magazine-essay": ["Title-led portrait essay: masthead, headline, credits, image, three columns, and pull quote.", "2026-10-05", "v0.2 draft"],
+      "portrait-essay-continuation": ["Continuous argument with two reading columns, a side note, and supporting detail.", "2026-10-06", "v0.1 draft"],
+      "portrait-essay-image-break": ["Image-led turn with context before and after the evidence image.", "2026-10-06", "v0.1 draft"],
+      "portrait-essay-conclusion": ["Final synthesis with a closing statement, sources, and author credit.", "2026-10-06", "v0.1 draft"],
+      "editorial-opener": ["Opens a continuous article with a thesis, lead image, and two distinct text roles.", "2026-10-03", "v1.2 draft"],
+      "editorial-image-break": ["Introduces a new article section through a wide image and paired context.", "2026-10-03", "v1.2 draft"],
+      "editorial-modular-rail": ["Combines a main narrative with short supporting modules distributed along a side rail.", "2026-10-03", "v1.3 draft"],
+      "portrait-social-feature": ["Image-led 4:5 article; crop alternative source ratios into the fixed image field without deleting the body.", "2026-10-05", "v0.4 draft"],
+      "portrait-adaptive-article-3x4": ["Image-led 3:4 article reflowed to two readable columns and a closing statement.", "2026-10-06", "v0.1 draft"],
+      "portrait-image-led-a4": ["A4 print article with running head, image, caption, three columns, and aligned folio.", "2026-10-06", "v0.1 draft"],
+      "portrait-image-cover-pair": ["Uncropped square-image cover followed by a complete two-column article page.", "2026-10-06", "v0.1 draft"],
+      "magazine-feature-opener": ["Facing-page thesis opener with one lead evidence image.", "2026-10-03", "v1.0 baseline"],
+      "magazine-spacious-opener": ["Quiet thesis and short lower-page introduction facing a dominant image plate.", "2026-10-06", "v0.1 draft"],
+      "magazine-statement-evidence": ["Asymmetrical spread pairing a large pull statement with documentary copy and image evidence.", "2026-10-06", "v0.1 draft"],
+      "magazine-dense-reading": ["Facing-page dense reading with narrow columns and a cross-column pull statement.", "2026-10-03", "v1.0 baseline"],
+      "magazine-image-evidence": ["Facing-page article section where images carry documentary evidence.", "2026-10-03", "v1.1 draft"],
+      "portfolio-opener-hero-rail": ["Project opener with a dominant hero image and concise supporting rail.", "2026-08-10", "v1.0 baseline"],
+      "case-study-2-column-board": ["Two-column case page balancing explanation and visual proof.", "2026-08-10", "v1.0 baseline"],
+      "moodboard-grid-3x2": ["Controlled grid for images, material references, and color signals.", "2026-08-10", "v1.0 baseline"],
+      "caption-rail-gallery": ["Image gallery with a dedicated caption and detail rail.", "2026-08-10", "v1.0 baseline"],
+      "interior-proof-1plus3": ["One primary proof image with three supporting details.", "2026-08-10", "v1.0 baseline"],
+      "strip-narrative-process": ["Sequential visual strip for a process or walkthrough.", "2026-08-10", "v1.0 baseline"],
+      "dense-presentation-board": ["Compact expert-review board with one primary signal and several supports.", "2026-08-10", "v1.0 baseline"],
+      "controlled-masonry-gallery": ["Mixed image ratios held inside a stable outer grid.", "2026-08-10", "v1.0 baseline"],
+      "layout-system-sheet": ["Inventory sheet of small reusable layout compositions.", "2026-08-10", "v1.0 baseline"],
+      "deck-contact-sheet": ["Thumbnail overview for reviewing sequence and rhythm across a deck.", "2026-08-10", "v1.1 draft"],
+      "vertical-portfolio-stack": ["Tall stack of repeated project boards for scroll-based portfolios.", "2026-08-10", "v1.0 baseline"],
+      "brand-guideline-board": ["Brand system board for type, palette, marks, and usage examples.", "2026-08-10", "v1.0 baseline"],
+      "campaign-deliverables-board": ["Repeated output frames with a campaign annotation rail.", "2026-08-10", "v1.0 baseline"]
+    };
+    const formatGroups = [
+      {
+        names: ["portrait-magazine-essay", "portrait-essay-continuation", "portrait-essay-image-break", "portrait-essay-conclusion", "portrait-image-led-a4", "editorial-opener", "editorial-image-break", "editorial-modular-rail"],
+        ratio: "210:297 (A4)", canvas: "210 × 297 mm", medium: "print PDF / zoomable digital article",
+        adaptation: "For social feeds, reflow into a readable multi-page carousel; do not scale down the full article."
+      },
+      {
+        names: ["portrait-social-feature", "portrait-image-cover-pair"],
+        ratio: "4:5", canvas: "1080 × 1350 px example", medium: "social image post",
+        adaptation: "Crop source images into the fixed article field; if an uncropped square is essential, use a cover and full continuation page."
+      },
+      {
+        names: ["portrait-adaptive-article-3x4"],
+        ratio: "3:4", canvas: "1080 × 1440 px example", medium: "portrait digital article",
+        adaptation: "Reflow the 4:5 article into two columns while preserving comparable copy and a clear bottom statement."
+      },
+      {
+        names: ["magazine-feature-opener", "magazine-spacious-opener", "magazine-statement-evidence", "magazine-dense-reading", "magazine-image-evidence"],
+        ratio: "420:297 (A4 spread)", canvas: "420 × 297 mm", medium: "facing-page print PDF / editorial review",
+        adaptation: "Export as two A4 pages for single-page reading; preserve gutter clearance and shared folio baseline."
+      },
+      {
+        names: ["portfolio-opener-hero-rail", "case-study-2-column-board", "moodboard-grid-3x2", "caption-rail-gallery", "interior-proof-1plus3", "strip-narrative-process", "dense-presentation-board", "controlled-masonry-gallery", "layout-system-sheet", "deck-contact-sheet"],
+        ratio: "16:9", canvas: "1920 × 1080 px example", medium: "screen presentation / deck",
+        adaptation: "For portrait or print, recompose the modules; do not crop or uniformly shrink the slide."
+      },
+      {
+        names: ["vertical-portfolio-stack"],
+        ratio: "4:5 overview", canvas: "1080 × 1350 px example", medium: "scrolling portfolio contact sheet",
+        adaptation: "For social delivery, split the four boards into readable individual pages."
+      },
+      {
+        names: ["brand-guideline-board", "campaign-deliverables-board"],
+        ratio: "4:3", canvas: "1600 × 1200 px example", medium: "design review board / digital document",
+        adaptation: "For 16:9 or portrait export, redistribute modules and recheck label size."
+      }
+    ];
+    const layoutFormats = Object.fromEntries(formatGroups.flatMap((group) => group.names.map((name) => [name, group])));
+    document.querySelectorAll("main article").forEach((article) => {
+      const title = article.querySelector(":scope > h2");
+      const name = title.textContent.split(" · ")[0];
+      const details = layoutRecords[name];
+      if (!details) throw new Error(`Missing layout record: ${name}`);
+      const format = layoutFormats[name];
+      if (!format) throw new Error(`Missing format record: ${name}`);
+      const record = document.createElement("p");
+      record.className = "layout-record";
+      record.append(details[0]);
+      const meta = document.createElement("span");
+      meta.className = "record-meta";
+      meta.textContent = `${details[1]} · ${details[2]} · ${format.ratio}`;
+      record.append(meta);
+      title.after(record);
+      const extra = document.createElement("details");
+      extra.className = "layout-extra";
+      const summary = document.createElement("summary");
+      summary.textContent = "Format and adaptation";
+      const description = document.createElement("p");
+      description.textContent = `${format.canvas} · ${format.medium}. ${format.adaptation}`;
+      extra.append(summary, description);
+      article.append(extra);
+    });
+    document.querySelectorAll(".slide > .mode-label").forEach((label) => {
+      const title = label.closest("article")?.querySelector(":scope > h2");
+      if (!title) return;
+      label.textContent = label.textContent.replace("bleed_mode:", "BLEED MODE:");
+      title.append(label);
+    });
+    const placeholderWords = (
+      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer vitae arcu sed neque " +
+      "gravida porttitor. Donec euismod sapien vitae dictum posuere. Praesent vitae magna " +
+      "at lectus consequat tristique. Vivamus at neque vitae sem consequat faucibus. " +
+      "Nulla facilisi. Mauris interdum lorem a porta cursus. Aliquam erat volutpat. " +
+      "Curabitur placerat magna nec aliquet consequat. Vestibulum ante ipsum primis."
+    ).split(" ");
+    function fillPlaceholderColumn(column, offset) {
+      column.replaceChildren();
+      const limit = column.clientHeight - 8;
+      let paragraph = document.createElement("p");
+      column.append(paragraph);
+      let paragraphWords = 0;
+      for (let i = 0; i < 1000; i += 1) {
+        const before = paragraph.textContent;
+        paragraph.textContent = before + (before ? " " : "") + placeholderWords[(i + offset) % placeholderWords.length];
+        if (paragraph.getBoundingClientRect().bottom - column.getBoundingClientRect().top > limit) {
+          paragraph.textContent = before;
+          if (!before) paragraph.remove();
+          break;
+        }
+        paragraphWords += 1;
+        if (paragraphWords === 44) {
+          paragraph = document.createElement("p");
+          column.append(paragraph);
+          paragraphWords = 0;
+        }
+      }
+      if (!paragraph.textContent) paragraph.remove();
+    }
+    function fillVerticalPreviews() {
+      document.querySelectorAll(".vertical-copy[data-lorem-fill]").forEach((copy) => {
+        [...copy.children].forEach((column, index) => fillPlaceholderColumn(column, index * 3));
+      });
+      document.querySelectorAll(".portrait-essay .essay-columns").forEach((copy) => {
+        [...copy.children].forEach((column, index) => fillPlaceholderColumn(column, index * 3));
+      });
+      document.querySelectorAll(".essay-followup .essay-fill").forEach((column, index) => fillPlaceholderColumn(column, index * 3));
+      document.querySelectorAll(".editorial-family .editorial-copy-lines[data-lorem-fill]").forEach((column, index) => fillPlaceholderColumn(column, index * 3));
+      document.querySelectorAll(".magazine-family .magazine-columns > .magazine-column, .magazine-family .magazine-evidence > .magazine-column, .magazine-family .magazine-statement-grid .magazine-column, .magazine-family .magazine-followup-grid .magazine-column").forEach((column, index) => fillPlaceholderColumn(column, index * 3));
+    }
+    const focusDialog = document.querySelector(".preview-focus");
+    const focusStage = document.querySelector(".preview-focus-stage");
+    let focusSource = null;
+    function sizeFocusPreview() {
+      if (!focusSource || !focusDialog.open) return;
+      const sourceBox = focusSource.getBoundingClientRect();
+      const scale = Math.min((window.innerWidth - 64) / sourceBox.width, (window.innerHeight - 110) / sourceBox.height, 3);
+      const clone = focusStage.firstElementChild;
+      clone.style.width = `${sourceBox.width}px`;
+      clone.style.height = `${sourceBox.height}px`;
+      clone.style.transform = `scale(${scale})`;
+      focusStage.style.width = `${sourceBox.width * scale}px`;
+      focusStage.style.height = `${sourceBox.height * scale}px`;
+    }
+    document.querySelectorAll("main .slide").forEach((slide) => {
+      const button = document.createElement("button");
+      button.className = "preview-zoom";
+      button.type = "button";
+      button.textContent = "View large";
+      button.addEventListener("click", () => {
+        focusSource = slide;
+        document.querySelector("#preview-focus-title").textContent = slide.closest("article").querySelector(":scope > h2").textContent;
+        const clone = slide.cloneNode(true);
+        if (slide.matches(".editorial-page, .portrait-essay")) {
+          const sourceStyle = getComputedStyle(slide);
+          clone.style.padding = [sourceStyle.paddingTop, sourceStyle.paddingRight, sourceStyle.paddingBottom, sourceStyle.paddingLeft].join(" ");
+        }
+        focusStage.replaceChildren(clone);
+        focusDialog.showModal();
+        sizeFocusPreview();
+      });
+      slide.after(button);
+    });
+    document.querySelector(".preview-focus-close").addEventListener("click", () => focusDialog.close());
+    focusDialog.addEventListener("click", (event) => { if (event.target === focusDialog) focusDialog.close(); });
+    focusDialog.addEventListener("close", () => { focusSource = null; focusStage.replaceChildren(); });
+    document.fonts.ready.then(fillVerticalPreviews);
+    let pendingVerticalFill = false;
+    window.addEventListener("resize", () => {
+      if (pendingVerticalFill) return;
+      pendingVerticalFill = true;
+      requestAnimationFrame(() => { pendingVerticalFill = false; fillVerticalPreviews(); sizeFocusPreview(); });
+    });
+  </script>
+</body>
+</html>

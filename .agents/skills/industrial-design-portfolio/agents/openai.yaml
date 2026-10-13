@@ -1,0 +1,6 @@
+interface:
+  display_name: "Industrial · 设计过程叙事"
+  short_description: "通过草图、CAD、渲染与分析图展示设计依据和演变，输出 HTML 作品集"
+  default_prompt: "使用 $industrial-design-portfolio 整理我的设计过程与证据，输出 HTML 作品集。"
+policy:
+  allow_implicit_invocation: true

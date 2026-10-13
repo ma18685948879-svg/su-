@@ -1,0 +1,5 @@
+interface:
+  display_name: "Industrial Design Portfolio · 工业设计作品集"
+  short_description: "把工业设计项目证据整理成可信、可讲述、可评审的作品集"
+  brand_color: "#1C67D2"
+  default_prompt: "Use $industrial-design-portfolio to review my industrial design materials and turn them into a credible portfolio case study."

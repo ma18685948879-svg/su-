@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "installed_at": "2026-10-13",
+  "skills": {
+    "folio": {
+      "repository": "https://github.com/Jorgut/folio",
+      "commit": "8b6ef0f4dfaef624ddcdd3b018b0fcb9d0358ae7",
+      "path": ".agents/skills/folio",
+      "copied_file_count": 88
+    },
+    "guizang-ppt-skill": {
+      "repository": "https://github.com/op7418/guizang-ppt-skill",
+      "commit": "c91369c449d34755d320a8b81d0734000d99d1ab",
+      "path": ".agents/skills/guizang-ppt-skill",
+      "copied_file_count": 40
+    },
+    "industrial-design-portfolio": {
+      "repository": "https://github.com/truman-t3/industrial-design-portfolio-skill",
+      "commit": "653fbd3c4b070c72cbd21a3253aa9300940835d8",
+      "path": ".agents/skills/industrial-design-portfolio",
+      "copied_file_count": 123
+    }
+  }
+}
