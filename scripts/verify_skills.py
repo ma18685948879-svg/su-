@@ -11,6 +11,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--runtime', action='store_true')
+parser.add_argument('--browser', action='store_true', help='Also require a successful Chromium launch and basic rendering')
+parser.add_argument('--skill', choices=('folio', 'guizang-ppt-skill', 'industrial-design-portfolio'), action='append', help='Limit runtime checks; all installed source files are still checked')
 args = parser.parse_args()
 lock = json.loads((ROOT / 'skills-lock.json').read_text())
 errors = []
@@ -34,14 +36,20 @@ for name, item in lock['skills'].items():
         if not file.is_file() or hashlib.sha256(file.read_bytes()).hexdigest() != expected:
             errors.append(f'{name}: upstream source changed or missing: {rel}')
     print(f'{name}: verified {len(info["copied_files_sha256"])} upstream files at {info["commit"][:12]}')
-    if args.runtime and name != 'industrial-design-portfolio':
+    if (args.runtime or args.browser) and name != 'industrial-design-portfolio' and (not args.skill or name in args.skill):
         code = "import {readFileSync} from 'node:fs';const pkg=JSON.parse(readFileSync('package.json'));for(const p of Object.keys(pkg.dependencies||{}))await import(p);console.log('Node dependencies imported');"
         result = subprocess.run(['node', '--input-type=module', '-e', code], cwd=folder, capture_output=True, text=True)
         if result.returncode:
             errors.append(f'{name}: runtime dependencies unavailable; run scripts/setup_skills.py')
         else:
             print(f'{name}: {result.stdout.strip()}')
-if args.runtime:
+        if args.browser:
+            result = subprocess.run(['node', str(ROOT / 'scripts/check_browser.mjs'), name], capture_output=True, text=True)
+            if result.returncode:
+                errors.append(f'{name}: browser launch failed: {result.stderr.strip()}')
+            else:
+                print(result.stdout.strip())
+if (args.runtime or args.browser) and (not args.skill or 'industrial-design-portfolio' in args.skill):
     folder = ROOT / '.agents/skills/industrial-design-portfolio'
     result = subprocess.run([sys.executable, str(folder / 'scripts/validate_layout_library.py')], capture_output=True, text=True)
     print(result.stdout.strip())
@@ -49,5 +57,6 @@ if args.runtime:
         errors.append('industrial-design-portfolio: upstream layout library validation failed')
 for error in errors:
     print('ERROR:', error, file=sys.stderr)
-print(f'Installation check: {len(errors)} error(s). Browser launch and application rendering require separate checks.')
+boundary = 'Browser launch checked; PPTX/PDF export and application rendering remain separate checks.' if args.browser else 'Browser launch not checked; use --browser. Application rendering requires separate checks.'
+print(f'Installation check: {len(errors)} error(s). {boundary}')
 sys.exit(bool(errors))

@@ -13,6 +13,7 @@ projects/
 scripts/
 ├── setup_skills.py
 ├── verify_skills.py
+├── check_browser.mjs
 └── check_skill_updates.py
 AGENTS.md
 README.md
@@ -51,6 +52,7 @@ Git 保存规范、脚本与锁文件；`node_modules` 和浏览器二进制不�
 ```bash
 python scripts/setup_skills.py
 python scripts/verify_skills.py --runtime
+python scripts/verify_skills.py --runtime --browser
 ```
 
 可以只恢复需要的 Skill：

@@ -30,6 +30,10 @@ Folio 大型 `demos/` 与上游 README 用展示截图 / 宣传图未复制；�
 
 当前环境：Node 24.19.0、Python 3.12.14。核心脚本与 Node 包可用；**Chromium 未配置完成**。Playwright 下载 Chrome for Testing 148.0.7778.96 / revision 1223 返回无效 ZIP，解压失败；未发现可替代的本地 Chromium。
 
+后续排查确认：下载 URL 返回 HTTP 200、`Content-Type: text/html`、长度 195 字节，正文是 `Site Unavailable / Unable to access this site`。这不是有效 ZIP；当前环境无法访问所需下载地址，并非 Skill 文件损坏。未发现本地 Chromium，也没有可用的系统 Chromium 包候选。
+
+新增 `scripts/check_browser.mjs` 和 `verify_skills.py --browser`，通过真实启动与页面几何检查判定浏览器就绪，不只检查 Node 模块。当前执行结果为两套 Skill 的浏览器可执行文件均缺失。安装脚本改为先恢复所有核心依赖，再按 Playwright 版本去重下载浏览器，避免首个下载失败中断其他 Skill 的安装。
+
 因此以下项目尚未验证，不应宣称导出端到端可用：
 
 - Folio 实际 PPTX / PDF / IDML / Figma 导出运行；

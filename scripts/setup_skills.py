@@ -22,6 +22,7 @@ def main():
     parser.add_argument('--industrial-tests', action='store_true', help='Install optional upstream test dependencies into a local venv')
     args = parser.parse_args()
     names = args.skill or list(NAMES)
+    browser_installs = {}
     for name in names:
         folder = ROOT / '.agents' / 'skills' / name
         if name == 'industrial-design-portfolio' and not args.industrial_tests:
@@ -32,14 +33,34 @@ def main():
             raise RuntimeError('npm is required. Use Node.js 20+ in the Codex environment.')
         run([npm, 'ci', '--ignore-scripts', '--no-audit', '--no-fund'], folder)
         if not args.skip_browser:
+            import json
+            package = folder / 'node_modules/playwright/package.json'
+            version = json.loads(package.read_text())['version']
             cli = folder / 'node_modules' / ('@playwright/test/cli.js' if name == 'industrial-design-portfolio' else 'playwright/cli.js')
-            run([shutil.which('node') or 'node', str(cli), 'install', 'chromium'], folder)
+            browser_installs.setdefault(version, (cli, folder))
         if name == 'industrial-design-portfolio':
             venv = folder / '.venv'
             run([sys.executable, '-m', 'venv', str(venv)], folder)
             python = venv / ('Scripts/python.exe' if sys.platform == 'win32' else 'bin/python')
             run([str(python), '-m', 'pip', 'install', '-r', str(folder / 'requirements-test.txt')], folder)
-    run([sys.executable, str(ROOT / 'scripts/verify_skills.py'), '--runtime'], ROOT)
+    verify = [sys.executable, str(ROOT / 'scripts/verify_skills.py'), '--runtime']
+    for name in names:
+        verify.extend(['--skill', name])
+    run(verify, ROOT)
+    # Restore all selected skills before a browser download can fail; deduplicate
+    # downloads for skills using the same Playwright version.
+    failures = []
+    for version, (cli, folder) in browser_installs.items():
+        try:
+            run([shutil.which('node') or 'node', str(cli), 'install', 'chromium'], folder)
+        except subprocess.CalledProcessError:
+            failures.append(version)
+    if failures:
+        raise RuntimeError('Core dependencies restored, but Chromium installation failed for Playwright ' + ', '.join(failures) + '. Check download access; HTTP 200 containing a Site Unavailable HTML page is not a valid browser ZIP.')
+    if browser_installs:
+        for name in names:
+            if name in ('folio', 'guizang-ppt-skill'):
+                run([shutil.which('node') or 'node', str(ROOT / 'scripts/check_browser.mjs'), name], ROOT)
 
 
 if __name__ == '__main__':
